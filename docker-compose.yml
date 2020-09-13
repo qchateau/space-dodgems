@@ -17,4 +17,4 @@ services:
     image: alpine:3.12
     volumes:
       - ./server/build/bin:/server/
-    command: /server/server 0.0.0.0 5678 1
+    command: /server/server 0.0.0.0 5678

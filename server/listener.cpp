@@ -1,10 +1,11 @@
 #include "listener.h"
 #include "session.h"
+#include "world.h"
 
 namespace si {
 
-listener::listener(net::io_context& ioc, tcp::endpoint endpoint)
-    : ioc_(ioc), acceptor_(ioc)
+listener::listener(net::io_context& ioc, world& world, tcp::endpoint endpoint)
+    : ioc_{ioc}, acceptor_{ioc}, world_{world}
 {
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(net::socket_base::reuse_address(true));
@@ -30,12 +31,8 @@ net::awaitable<void> listener::on_run()
         acceptor_.local_endpoint().port());
 
     while (true) {
-        // The new connection gets its own strand
-        auto socket = co_await acceptor_.async_accept(
-            net::make_strand(ioc_), net::use_awaitable);
-
-        // Create the http session and run it
-        std::make_shared<session>(std::move(socket))->run();
+        auto socket = co_await acceptor_.async_accept(net::use_awaitable);
+        std::make_shared<session>(world_, std::move(socket))->run();
     }
 }
 

@@ -10,10 +10,12 @@
 #include "config.h"
 
 namespace si {
-// Accepts incoming connections and launches the sessions
+
+class world;
+
 class listener : public std::enable_shared_from_this<listener> {
 public:
-    listener(net::io_context& ioc, tcp::endpoint endpoint);
+    listener(net::io_context& ioc, world& world, tcp::endpoint endpoint);
 
     void run();
 
@@ -22,6 +24,7 @@ private:
 
     net::io_context& ioc_;
     tcp::acceptor acceptor_;
+    world& world_;
 };
 
 } // si

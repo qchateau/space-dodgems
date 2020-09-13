@@ -31,6 +31,8 @@ add_executable(
     main.cpp
     listener.cpp
     session.cpp
+    player.cpp
+    world.cpp
 )
 target_link_libraries(
     server
