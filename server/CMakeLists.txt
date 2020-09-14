@@ -1,14 +1,22 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(spaceinvader_server)
 
-include(cmake/conan.cmake)
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+   file(
+        DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
+        "${CMAKE_BINARY_DIR}/conan.cmake"
+        TLS_VERIFY ON
+    )
+endif()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-fcoroutines-ts -stdlib=libc++)
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static  -stdlib=libc++ -lc++abi")
 
 # add this to have a working compile_commands.json ...
 include_directories(SYSTEM /usr/lib/llvm-10/include/c++/v1/)
