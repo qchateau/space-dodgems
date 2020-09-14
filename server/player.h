@@ -16,7 +16,12 @@ public:
     using id_t = uint64_t;
     using handle = std::unique_ptr<player, std::function<void(player*)>>;
     struct state_t {
+        const double width{0.01};
+        const double height{0.01};
+
         double x, y, dx, dy, ddx, ddy;
+
+        double l1_speed() const;
     };
 
     player(world& world);
@@ -30,10 +35,14 @@ public:
     bool operator==(const player&) const;
     bool operator!=(const player&) const;
 
+    void set_pos(double x, double y);
     void update_pos(std::chrono::nanoseconds dt);
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
+
+    bool is_in_world() const;
+    bool collides(const player& other) const;
 
     void to_left();
     void to_right();
@@ -48,7 +57,6 @@ private:
 
     id_t id_;
     state_t state_;
-    double speed_;
     double acc_;
     bool alive_;
 };

@@ -3,6 +3,7 @@
 #include <future>
 #include <list>
 #include <memory>
+#include <random>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
@@ -21,12 +22,13 @@ public:
     nlohmann::json game_state_for_player(const player::handle& player);
 
 private:
+    void set_initial_player_pos(player& p);
     void unregister_player(const player& p);
 
     net::awaitable<void> on_run();
     void update(std::chrono::nanoseconds dt);
-    bool is_in_world(const player& p) const;
 
+    std::mt19937 rnd_gen_{std::random_device{}()};
     net::io_context& ioc_;
     std::list<player> players_;
 };

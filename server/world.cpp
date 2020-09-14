@@ -7,6 +7,8 @@ world::world(net::io_context& ioc) : ioc_{ioc} {}
 typename player::handle world::register_player()
 {
     auto& new_player = players_.emplace_back(*this);
+    set_initial_player_pos(new_player);
+
     spdlog::info("registering player {}", new_player.id());
     return {
         &new_player,
@@ -37,6 +39,12 @@ void world::run()
         net::detached);
 }
 
+void world::set_initial_player_pos(player& p)
+{
+    std::uniform_real_distribution<> rnd(0.1, 0.9);
+    p.set_pos(rnd(rnd_gen_), rnd(rnd_gen_));
+}
+
 nlohmann::json world::game_state_for_player(const player::handle& player)
 {
     nlohmann::json state = {{"players", nlohmann::json::array()}};
@@ -58,6 +66,8 @@ nlohmann::json world::game_state_for_player(const player::handle& player)
                 {"dy", p.state().dy},
                 {"ddx", p.state().ddx},
                 {"ddy", p.state().ddy},
+                {"width", p.state().width},
+                {"height", p.state().height},
                 {"is_me", is_me},
                 {"alive", p.alive()},
             });
@@ -85,16 +95,27 @@ void world::update(std::chrono::nanoseconds dt)
 {
     for (player& p : players_) {
         p.update_pos(dt);
-        if (!is_in_world(p)) {
+        if (!p.is_in_world()) {
             p.kill();
         }
     }
-}
 
-bool world::is_in_world(const player& p) const
-{
-    return 0 <= p.state().x && p.state().x < 1 && 0 <= p.state().y
-           && p.state().y < 1;
+    for (auto player_it = begin(players_); player_it != end(players_);
+         ++player_it) {
+        for (auto other_it = ++decltype(player_it)(player_it);
+             other_it != end(players_);
+             ++other_it) {
+            if (!player_it->collides(*other_it)) {
+                continue;
+            }
+
+            auto& killed = player_it->state().l1_speed()
+                                   <= other_it->state().l1_speed()
+                               ? *player_it
+                               : *other_it;
+            killed.kill();
+        }
+    }
 }
 
 } // si
