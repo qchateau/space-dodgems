@@ -159,7 +159,10 @@ class GameManager {
     if (this.currentGame) {
       this.currentGame.gameOver();
     }
-    this.currentGame = new GameEngine("ws://localhost:8080/ws", "canvas");
+    this.currentGame = new GameEngine(
+      "ws://" + window.location.hostname + ":" + window.location.port + "/ws",
+      "canvas"
+    );
   }
 
   onKeyDown(event) {
