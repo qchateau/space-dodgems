@@ -80,7 +80,6 @@ net::awaitable<void> session_t::write_loop()
 
 void session_t::handle_key(const std::string& key)
 {
-    spdlog::info("got key: {}", key);
     if (key == "left") {
         player_->to_left();
     }
