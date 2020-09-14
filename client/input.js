@@ -19,16 +19,6 @@ Function.prototype.throttle = function (milliseconds, context) {
   };
 };
 
-function clamp(v, minv, maxv) {
-  if (v < minv) {
-    return minv;
-  } else if (v > maxv) {
-    return maxv;
-  } else {
-    return v;
-  }
-}
-
 class Input {
   constructor(element, maxDragLength, onInput) {
     this.touchStartX = 0;
@@ -110,8 +100,6 @@ class Input {
   }
 
   sendCommand(ddx, ddy) {
-    ddx = clamp(ddx, -maxDd, maxDd);
-    ddy = clamp(ddy, -maxDd, maxDd);
     this.onInput({ command: { ddx: ddx, ddy: ddy } });
   }
 

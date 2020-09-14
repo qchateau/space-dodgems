@@ -5,4 +5,5 @@ https://w3bits.com/prevent-chrome-pull-to-refresh-css/#:~:text=When%20being%20at
 
 body {
   overscroll-behavior-y: none;
+  background-color: black;
 }

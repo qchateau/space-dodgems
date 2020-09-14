@@ -25,15 +25,11 @@ class CanvasManager {
   }
 
   drawScore(player) {
-    const pointMultiplier = 1e3;
-
     // draw lifetime/points
     this.ctx.textAlign = "start";
     this.ctx.font = "20px " + font;
-    this.ctx.fillStyle = "black";
-    let scoreStr = (player.lifetime * pointMultiplier)
-      .toFixed()
-      .padStart(8, " ");
+    this.ctx.fillStyle = "white";
+    let scoreStr = player.score.toFixed().padStart(8, " ");
     this.ctx.fillText("Score: " + scoreStr, this.margin + 10, this.margin + 25);
   }
 
@@ -51,8 +47,9 @@ class CanvasManager {
     }
 
     // draw acceleration line
-    this.ctx.strokeStyle = "blue";
-    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "rgb(150, 150, 150)";
+
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.setLineDash([]);
     this.ctx.moveTo(this.margin + x, this.margin + y);
@@ -64,11 +61,11 @@ class CanvasManager {
 
     // draw player
     if (player.is_me) {
-      this.ctx.fillStyle = "green";
+      this.ctx.fillStyle = "rgb(0, 255, 0)";
     } else if (!player.alive) {
       this.ctx.fillStyle = "black";
     } else {
-      this.ctx.fillStyle = "red";
+      this.ctx.fillStyle = "rgb(255, 0, 0)";
     }
 
     this.ctx.beginPath();
@@ -89,7 +86,7 @@ class CanvasManager {
       return;
     }
 
-    this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
     this.ctx.beginPath();
     this.ctx.arc(x, y, 0.02 * this.refSize, 0, 2 * Math.PI);
     this.ctx.fill();
@@ -106,7 +103,7 @@ class CanvasManager {
     );
 
     this.ctx.font = "20px " + font;
-    this.ctx.fillStyle = "black";
+    this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "tap to retry",
       this.margin + this.refSize / 2,
@@ -115,7 +112,8 @@ class CanvasManager {
   }
 
   clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = "black";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
 

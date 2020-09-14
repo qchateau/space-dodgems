@@ -37,8 +37,8 @@ void player_t::set_pos(double x, double y)
 
 void player_t::set_dd(double ddx, double ddy)
 {
-    state_.ddx = ddx;
-    state_.ddy = ddy;
+    state_.ddx = std::clamp(ddx, -max_dd, max_dd);
+    state_.ddy = std::clamp(ddy, -max_dd, max_dd);
 }
 
 void player_t::update_pos(std::chrono::nanoseconds dt)
@@ -47,8 +47,11 @@ void player_t::update_pos(std::chrono::nanoseconds dt)
         std::chrono::duration_cast<std::chrono::duration<double>>(dt).count();
     state_.dx += state_.ddx * acc_ * seconds;
     state_.dy += state_.ddy * acc_ * seconds;
-    state_.x += state_.dx * seconds;
-    state_.y += state_.dy * seconds;
+    const auto xinc = state_.dx * seconds;
+    const auto yinc = state_.dy * seconds;
+    state_.x += xinc;
+    state_.y += yinc;
+    score_ += (std::abs(xinc) + std::abs(yinc)) * 1000;
 }
 
 std::chrono::nanoseconds player_t::lifetime() const

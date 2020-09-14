@@ -24,6 +24,7 @@ public:
 
         double l1_speed() const;
     };
+    static constexpr double max_dd = 5;
 
     player_t(world_t& world);
 
@@ -44,6 +45,7 @@ public:
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
     std::chrono::nanoseconds lifetime() const;
+    double score() const { return score_; }
 
     bool is_in_world() const;
     bool collides(const player_t& other) const;
@@ -56,6 +58,7 @@ private:
 
     id_t id_;
     clock_t::time_point birth_time_;
+    double score_;
     state_t state_;
     double acc_;
     bool alive_;

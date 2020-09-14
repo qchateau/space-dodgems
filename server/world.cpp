@@ -73,6 +73,7 @@ nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
                 {"width", p.state().width},
                 {"height", p.state().height},
                 {"lifetime", lifetime},
+                {"score", p.score()},
                 {"is_me", is_me},
                 {"alive", p.alive()},
             });
