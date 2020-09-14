@@ -3,9 +3,9 @@ const font = "Courier New";
 class CanvasManager {
   constructor(id) {
     this.canvas = document.getElementById(id);
-    let size = Math.min(window.innerWidth, window.innerHeight);
-    this.canvas.width = size * 0.95;
-    this.canvas.height = size * 0.95;
+    this.refSize = Math.min(window.innerWidth, window.innerHeight);
+    this.canvas.width = this.refSize * 0.95;
+    this.canvas.height = this.refSize * 0.95;
     this.ctx = this.canvas.getContext("2d");
   }
 
@@ -23,10 +23,10 @@ class CanvasManager {
   }
 
   drawPlayer(player) {
-    const accSize = 10;
+    const accSize = (0.05 * this.refSize) / maxDd;
 
     const widthRect = this.canvas.width * player.width;
-    const heightRect = this.canvas.width * player.height;
+    const heightRect = this.canvas.height * player.height;
     const x = player.x * this.canvas.width;
     const y = (1 - player.y) * this.canvas.height;
 
@@ -37,7 +37,7 @@ class CanvasManager {
 
     // draw acceleration line
     this.ctx.strokeStyle = "blue";
-    this.ctx.lineWidth = 2;
+    this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
     this.ctx.lineTo(x - accSize * player.ddx, y + accSize * player.ddy);
@@ -72,7 +72,7 @@ class CanvasManager {
     this.ctx.font = "20px " + font;
     this.ctx.fillStyle = "black";
     this.ctx.fillText(
-      "press space to retry",
+      "tap to retry",
       this.canvas.width / 2,
       this.canvas.height / 2 + 20
     );
@@ -124,20 +124,11 @@ class GameEngine {
     }
   }
 
-  onKeyDown(event) {
-    if (event.keyCode == 37) {
-      this.send({ key: "left" });
-    } else if (event.keyCode == 39) {
-      this.send({ key: "right" });
-    } else if (event.keyCode == 38) {
-      this.send({ key: "up" });
-    } else if (event.keyCode == 40) {
-      this.send({ key: "down" });
-    }
+  onInput(input) {
+    this.send(input);
   }
 
   send(msg) {
-    console.log("sending", msg);
     this.sock.send(JSON.stringify(msg));
   }
 
@@ -151,8 +142,11 @@ class GameEngine {
 class GameManager {
   constructor() {
     this.currentGame = null;
-
-    document.addEventListener("keydown", this.onKeyDown.bind(this));
+    this.input = new Input(
+      document,
+      window.innerWidth,
+      this.onInput.bind(this)
+    );
   }
 
   newGame() {
@@ -165,18 +159,17 @@ class GameManager {
     );
   }
 
-  onKeyDown(event) {
+  onInput(input) {
     if (!this.currentGame) {
       return;
     }
 
     if (this.currentGame.gameIsOver) {
-      if (event.keyCode == 32) {
-        // space
+      if (input.control == "ok") {
         this.newGame();
       }
     } else {
-      this.currentGame.onKeyDown(event);
+      this.currentGame.onInput(input);
     }
   }
 }

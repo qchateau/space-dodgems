@@ -28,7 +28,7 @@ private:
     net::awaitable<void> read_loop();
     net::awaitable<void> write_loop();
 
-    void handle_key(const std::string& key);
+    void handle_command(const nlohmann::json& command);
 
     world_t& world_;
     player_t::handle_t player_;

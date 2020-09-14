@@ -1,0 +1,9 @@
+/*
+Hack to disable pull to refresh on chrome
+https://w3bits.com/prevent-chrome-pull-to-refresh-css/#:~:text=When%20being%20at%20the%20very,then%20set%20it%20to%20Disable.
+*/
+
+body {
+  /* Disables pull-to-refresh but allows overscroll glow effects. */
+  overscroll-behavior-y: contain;
+}

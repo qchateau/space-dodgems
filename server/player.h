@@ -37,6 +37,8 @@ public:
     bool operator!=(const player_t&) const;
 
     void set_pos(double x, double y);
+    void set_dd(double ddx, double ddy);
+
     void update_pos(std::chrono::nanoseconds dt);
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
@@ -45,11 +47,6 @@ public:
 
     bool is_in_world() const;
     bool collides(const player_t& other) const;
-
-    void to_left();
-    void to_right();
-    void to_top();
-    void to_bottom();
     void kill();
 
 private:

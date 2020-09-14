@@ -58,7 +58,9 @@ net::awaitable<void> session_t::read_loop()
         auto buffer = net::dynamic_buffer(str_buffer);
         co_await ws_.async_read(buffer, net::use_awaitable);
         auto msg = nlohmann::json::parse(str_buffer);
-        handle_key(msg["key"].get<std::string>());
+        if (msg.contains("command")) {
+            handle_command(msg["command"]);
+        }
     }
 }
 
@@ -78,22 +80,13 @@ net::awaitable<void> session_t::write_loop()
     }
 }
 
-void session_t::handle_key(const std::string& key)
+void session_t::handle_command(const nlohmann::json& command)
 {
-    if (key == "left") {
-        player_->to_left();
-    }
-    else if (key == "right") {
-        player_->to_right();
-    }
-    else if (key == "up") {
-        player_->to_top();
-    }
-    else if (key == "down") {
-        player_->to_bottom();
+    if (command.contains("ddx") && command.contains("ddy")) {
+        player_->set_dd(command["ddx"].get<double>(), command["ddy"].get<double>());
     }
     else {
-        spdlog::warn("unexpected key: {}", key);
+        spdlog::warn("bad command: {}", command.dump());
     }
 }
 

@@ -35,6 +35,12 @@ void player_t::set_pos(double x, double y)
     state_.y = y;
 }
 
+void player_t::set_dd(double ddx, double ddy)
+{
+    state_.ddx = ddx;
+    state_.ddy = ddy;
+}
+
 void player_t::update_pos(std::chrono::nanoseconds dt)
 {
     double seconds =
@@ -62,26 +68,6 @@ bool player_t::collides(const player_t& other) const
     const auto dist_x = std::abs(other.state_.x - state_.x);
     const auto dist_y = std::abs(other.state_.y - state_.y);
     return dist_x < width && dist_y < height;
-}
-
-void player_t::to_left()
-{
-    state_.ddx = std::min(.0, state_.ddx - 1);
-}
-
-void player_t::to_right()
-{
-    state_.ddx = std::max(.0, state_.ddx + 1);
-}
-
-void player_t::to_top()
-{
-    state_.ddy = std::max(.0, state_.ddy + 1);
-}
-
-void player_t::to_bottom()
-{
-    state_.ddy = std::min(.0, state_.ddy - 1);
 }
 
 void player_t::kill()
