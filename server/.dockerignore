@@ -1,0 +1,5 @@
+build/
+.clangd/
+
+Dockerfile
+compile_commands.json

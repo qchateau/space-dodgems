@@ -18,9 +18,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-fcoroutines-ts -stdlib=libc++)
 
-# add this to have a working compile_commands.json ...
-include_directories(SYSTEM /usr/lib/llvm-10/include/c++/v1/)
-
 conan_cmake_run(
     BASIC_SETUP
     CMAKE_TARGETS
@@ -33,29 +30,31 @@ conan_cmake_run(
         --build missing
 )
 
-add_executable(
-    server
+if (NOT CONAN_ONLY)
+    add_executable(
+        server
 
-    main.cpp
-    listener.cpp
-    session.cpp
-    player.cpp
-    world.cpp
-)
-target_link_libraries(
-    server
+        main.cpp
+        listener.cpp
+        session.cpp
+        player.cpp
+        world.cpp
+    )
+    target_link_libraries(
+        server
 
-    CONAN_PKG::fmt
-    CONAN_PKG::spdlog
-    CONAN_PKG::boost
-    CONAN_PKG::nlohmann_json
-)
-target_link_options(
-    server
-    PUBLIC
+        CONAN_PKG::fmt
+        CONAN_PKG::spdlog
+        CONAN_PKG::boost
+        CONAN_PKG::nlohmann_json
+    )
+    target_link_options(
+        server
+        PUBLIC
 
-    -static
-    -stdlib=libc++
-    -lc++abi
-    -fuse-ld=lld
-)
+        -static
+        -stdlib=libc++
+        -lc++abi
+        -fuse-ld=lld
+    )
+endif () # NOT CONAN_ONLY

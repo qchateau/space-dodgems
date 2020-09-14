@@ -1,5 +1,8 @@
 version: "3.2"
 
+volumes:
+  conandata:
+
 services:
   nginx:
     restart: always
@@ -10,11 +13,15 @@ services:
     ports:
       - "8080:80"
     environment:
-      - WS_SERVER=ws_backend:5678
+      - WS_SERVER=backend:5678
 
-  ws_backend:
+  backend:
     restart: always
-    image: alpine:3.12
+    build:
+      context: ./server
     volumes:
-      - ./server/build/bin:/server/
-    command: /server/server 0.0.0.0 5678
+      - conandata:/root/.conan/
+      - ./server/:/opt/server/
+    environment:
+      - BIND_IP=0.0.0.0
+      - PORT=5678
