@@ -4,22 +4,27 @@ namespace si {
 
 world::world(net::io_context& ioc) : ioc_{ioc} {}
 
-typename player::handle world::registerPlayer()
+typename player::handle world::register_player()
 {
     auto& new_player = players_.emplace_back(*this);
-    spdlog::info("registering new player");
-    return {&new_player, [this](player* p) {
-                auto it = find_if(
-                    begin(players_), end(players_), [p](const auto& player) {
-                        return *p == player;
-                    });
-                if (it == end(players_)) {
-                    spdlog::warn("unregistering unknown player");
-                    return;
-                }
-                spdlog::info("unregistering player");
-                players_.erase(it);
-            }};
+    spdlog::info("registering player {}", new_player.id());
+    return {
+        &new_player,
+        [self = shared_from_this()](player* p) { self->unregister_player(*p); },
+    };
+}
+
+void world::unregister_player(const player& p)
+{
+    auto it = find_if(begin(players_), end(players_), [&](const auto& player) {
+        return p == player;
+    });
+    if (it == end(players_)) {
+        spdlog::warn("unregistering unknown player {}", p.id());
+        return;
+    }
+    spdlog::info("unregistering player {}", p.id());
+    players_.erase(it);
 }
 
 void world::run()
@@ -30,6 +35,31 @@ void world::run()
             co_await self->on_run();
         },
         net::detached);
+}
+
+nlohmann::json world::game_state_for_player(const player::handle& player)
+{
+    nlohmann::json state = {{"players", nlohmann::json::array()}};
+
+    bool game_over = false;
+    transform(
+        begin(players_),
+        end(players_),
+        back_inserter(state["players"]),
+        [&](const auto& p) {
+            bool is_me = p == *player;
+            if (is_me && !p.alive()) {
+                game_over = true;
+            }
+            return nlohmann::json(
+                {{"x", p.x()},
+                 {"y", p.y()},
+                 {"is_me", is_me},
+                 {"alive", p.alive()}});
+        });
+
+    state["game_over"] = game_over;
+    return state;
 }
 
 net::awaitable<void> world::on_run()
@@ -50,7 +80,15 @@ void world::update(std::chrono::nanoseconds dt)
 {
     for (player& p : players_) {
         p.update_pos(dt);
+        if (!is_in_world(p)) {
+            p.kill();
+        }
     }
+}
+
+bool world::is_in_world(const player& p) const
+{
+    return 0 <= p.x() && p.x() < 1 && 0 <= p.y() && p.y() < 1;
 }
 
 } // si

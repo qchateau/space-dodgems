@@ -1,21 +1,47 @@
 class CanvasManager {
   constructor(id) {
     this.canvas = document.getElementById(id);
-    this.canvas.width = window.innerWidth * 0.9;
-    this.canvas.height = window.innerHeight * 0.9;
+    let size = Math.min(window.innerWidth, window.innerHeight);
+    this.canvas.width = size * 0.95;
+    this.canvas.height = size * 0.95;
     this.ctx = this.canvas.getContext("2d");
   }
 
-  drawRect(x, y) {
-    const w = 100;
-    const h = 100;
+  drawPlayer(player) {
+    const w = 30;
+    const h = 30;
 
-    // bring origin to the middle
-    y = this.canvas.height / 2 - y;
-    x = this.canvas.width / 2 + x;
+    let x = player.x * this.canvas.width;
+    let y = (1 - player.y) * this.canvas.height;
 
-    this.ctx.fillStyle = "green";
+    if (player.is_me) {
+      this.ctx.fillStyle = "green";
+    } else if (!player.alive) {
+      this.ctx.fillStyle = "black";
+    } else {
+      this.ctx.fillStyle = "red";
+    }
+
     this.ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  }
+
+  drawGameOver() {
+    this.ctx.textAlign = "center";
+    this.ctx.font = "50px Verdana";
+    this.ctx.fillStyle = "red";
+    this.ctx.fillText(
+      "GAME OVER",
+      this.canvas.width / 2,
+      this.canvas.height / 2 - 20
+    );
+
+    this.ctx.font = "20px Verdana";
+    this.ctx.fillStyle = "black";
+    this.ctx.fillText(
+      "press space to retry",
+      this.canvas.width / 2,
+      this.canvas.height / 2 + 20
+    );
   }
 
   clear() {
@@ -23,8 +49,9 @@ class CanvasManager {
   }
 }
 
-class Engine {
+class GameEngine {
   constructor(url, canvasId) {
+    this.gameIsOver = false;
     this.canvas = new CanvasManager(canvasId);
     this.sock = new WebSocket(url);
     this.sock.onopen = function () {
@@ -41,9 +68,6 @@ class Engine {
       const msg = JSON.parse(e.data);
       this.onMessage(msg);
     }.bind(this);
-
-    // Listen keyboard inputs
-    document.addEventListener("keydown", this.onKeyDown.bind(this));
   }
 
   onOpen() {
@@ -56,13 +80,19 @@ class Engine {
 
   onMessage(msg) {
     this.canvas.clear();
+
+    if (msg.game_over) {
+      this.gameOver();
+      return;
+    }
+
+    console.log("state:", msg);
     for (let player of msg.players) {
-      this.canvas.drawRect(player.x, player.y);
+      this.canvas.drawPlayer(player);
     }
   }
 
   onKeyDown(event) {
-    console.log("key press", event.keyCode);
     if (event.keyCode == 37) {
       this.send({ key: "left" });
     } else if (event.keyCode == 39) {
@@ -78,11 +108,48 @@ class Engine {
     console.log("sending", msg);
     this.sock.send(JSON.stringify(msg));
   }
+
+  gameOver() {
+    this.sock.close();
+    this.canvas.drawGameOver();
+    this.gameIsOver = true;
+  }
 }
 
-function main() {
+class GameManager {
+  constructor() {
+    this.currentGame = null;
+
+    document.addEventListener("keydown", this.onKeyDown.bind(this));
+  }
+
+  newGame() {
+    if (this.currentGame) {
+      this.currentGame.gameOver();
+    }
+    this.currentGame = new GameEngine("ws://localhost:8080/ws", "canvas");
+  }
+
+  onKeyDown(event) {
+    if (!this.currentGame) {
+      return;
+    }
+
+    if (this.currentGame.gameIsOver) {
+      if (event.keyCode == 32) {
+        // space
+        this.newGame();
+      }
+    } else {
+      this.currentGame.onKeyDown(event);
+    }
+  }
+}
+
+function startGame() {
   console.log("Running ...");
-  engine = new Engine("ws://localhost:8080/ws", "canvas");
+  manager.newGame();
 }
 
-window.onload = main;
+manager = new GameManager();
+window.onload = startGame;

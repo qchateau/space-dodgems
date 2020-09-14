@@ -1,6 +1,5 @@
 #include "session.h"
 
-#include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
 namespace si {
@@ -9,7 +8,7 @@ session::session(world& world, tcp::socket&& socket)
     : world_{world}, ws_{std::move(socket)}
 {
     spdlog::info("new session {:p}", static_cast<void*>(this));
-    player_ = world.registerPlayer();
+    player_ = world.register_player();
 }
 
 session::~session()
@@ -71,18 +70,7 @@ net::awaitable<void> session::write_loop()
     timer.expires_from_now(std::chrono::seconds{0});
 
     while (true) {
-        nlohmann::json state = {{"players", nlohmann::json::array()}};
-
-        const auto& players = world_.players();
-        transform(
-            begin(players),
-            end(players),
-            back_inserter(state["players"]),
-            [](const player& p) {
-                return nlohmann::json({{"x", p.x()}, {"y", p.y()}});
-            });
-
-        auto msg = state.dump();
+        auto msg = world_.game_state_for_player(player_).dump();
         co_await ws_.async_write(net::buffer(msg), net::use_awaitable);
 
         timer.expires_at(timer.expires_at() + dt);

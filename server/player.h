@@ -31,11 +31,13 @@ public:
     auto x() const { return x_; }
     auto y() const { return y_; }
     id_t id() const { return id_; }
+    bool alive() const { return alive_; }
 
     void to_left();
     void to_right();
     void to_top();
     void to_bottom();
+    void kill();
 
 private:
     static std::atomic<id_t> id_generator_;
@@ -48,5 +50,6 @@ private:
     double dx_;
     double dy_;
     double speed_;
+    bool alive_;
 };
 } // si

@@ -5,7 +5,14 @@ namespace si {
 std::atomic<player::id_t> player::id_generator_{0};
 
 player::player(world& world)
-    : id_{id_generator_.fetch_add(1)}, x_{0}, y_{0}, dx_{0}, dy_{0}, speed_{100}, world_{world}
+    : id_{id_generator_.fetch_add(1)},
+      x_{0.5},
+      y_{0.5},
+      dx_{0},
+      dy_{0},
+      speed_{0.25},
+      alive_{true},
+      world_{world}
 {
 }
 
@@ -49,6 +56,11 @@ void player::to_bottom()
 {
     dx_ = 0;
     dy_ = -1;
+}
+
+void player::kill()
+{
+    alive_ = false;
 }
 
 } // si
