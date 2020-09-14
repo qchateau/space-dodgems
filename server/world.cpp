@@ -2,9 +2,9 @@
 
 namespace si {
 
-world::world(net::io_context& ioc) : ioc_{ioc} {}
+world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
 
-typename player::handle world::register_player()
+typename player_t::handle_t world_t::register_player()
 {
     auto& new_player = players_.emplace_back(*this);
     set_initial_player_pos(new_player);
@@ -12,11 +12,11 @@ typename player::handle world::register_player()
     spdlog::info("registering player {}", new_player.id());
     return {
         &new_player,
-        [self = shared_from_this()](player* p) { self->unregister_player(*p); },
+        [self = shared_from_this()](player_t* p) { self->unregister_player(*p); },
     };
 }
 
-void world::unregister_player(const player& p)
+void world_t::unregister_player(const player_t& p)
 {
     auto it = find_if(begin(players_), end(players_), [&](const auto& player) {
         return p == player;
@@ -29,7 +29,7 @@ void world::unregister_player(const player& p)
     players_.erase(it);
 }
 
-void world::run()
+void world_t::run()
 {
     net::co_spawn(
         ioc_,
@@ -39,13 +39,13 @@ void world::run()
         net::detached);
 }
 
-void world::set_initial_player_pos(player& p)
+void world_t::set_initial_player_pos(player_t& p)
 {
     std::uniform_real_distribution<> rnd(0.1, 0.9);
     p.set_pos(rnd(rnd_gen_), rnd(rnd_gen_));
 }
 
-nlohmann::json world::game_state_for_player(const player::handle& player)
+nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
 {
     nlohmann::json state = {{"players", nlohmann::json::array()}};
 
@@ -82,7 +82,7 @@ nlohmann::json world::game_state_for_player(const player::handle& player)
     return state;
 }
 
-net::awaitable<void> world::on_run()
+net::awaitable<void> world_t::on_run()
 {
     const auto dt = std::chrono::milliseconds{17};
     auto executor = co_await net::this_coro::executor;
@@ -96,9 +96,9 @@ net::awaitable<void> world::on_run()
     }
 }
 
-void world::update(std::chrono::nanoseconds dt)
+void world_t::update(std::chrono::nanoseconds dt)
 {
-    for (player& p : players_) {
+    for (player_t& p : players_) {
         p.update_pos(dt);
         if (!p.is_in_world()) {
             p.kill();

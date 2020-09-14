@@ -11,11 +11,11 @@
 
 namespace si {
 
-class world;
+class world_t;
 
-class listener : public std::enable_shared_from_this<listener> {
+class listener_t : public std::enable_shared_from_this<listener_t> {
 public:
-    listener(net::io_context& ioc, world& world, tcp::endpoint endpoint);
+    listener_t(net::io_context& ioc, world_t& world, tcp::endpoint endpoint);
 
     void run();
 
@@ -24,7 +24,7 @@ private:
 
     net::io_context& ioc_;
     tcp::acceptor acceptor_;
-    world& world_;
+    world_t& world_;
 };
 
 } // si

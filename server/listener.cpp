@@ -4,7 +4,7 @@
 
 namespace si {
 
-listener::listener(net::io_context& ioc, world& world, tcp::endpoint endpoint)
+listener_t::listener_t(net::io_context& ioc, world_t& world, tcp::endpoint endpoint)
     : ioc_{ioc}, acceptor_{ioc}, world_{world}
 {
     acceptor_.open(endpoint.protocol());
@@ -13,7 +13,7 @@ listener::listener(net::io_context& ioc, world& world, tcp::endpoint endpoint)
     acceptor_.listen(net::socket_base::max_listen_connections);
 }
 
-void listener::run()
+void listener_t::run()
 {
     net::co_spawn(
         ioc_,
@@ -23,7 +23,7 @@ void listener::run()
         net::detached);
 }
 
-net::awaitable<void> listener::on_run()
+net::awaitable<void> listener_t::on_run()
 {
     spdlog::info(
         "listening on {}:{}",
@@ -32,7 +32,7 @@ net::awaitable<void> listener::on_run()
 
     while (true) {
         auto socket = co_await acceptor_.async_accept(net::use_awaitable);
-        std::make_shared<session>(world_, std::move(socket))->run();
+        std::make_shared<session_t>(world_, std::move(socket))->run();
     }
 }
 

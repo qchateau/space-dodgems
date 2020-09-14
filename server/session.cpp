@@ -4,19 +4,19 @@
 
 namespace si {
 
-session::session(world& world, tcp::socket&& socket)
+session_t::session_t(world_t& world, tcp::socket&& socket)
     : world_{world}, ws_{std::move(socket)}
 {
     spdlog::info("new session {:p}", static_cast<void*>(this));
     player_ = world.register_player();
 }
 
-session::~session()
+session_t::~session_t()
 {
     spdlog::info("closing session {:p}", static_cast<void*>(this));
 }
 
-void session::run()
+void session_t::run()
 {
     net::co_spawn(
         ws_.get_executor(),
@@ -26,7 +26,7 @@ void session::run()
         net::detached);
 }
 
-net::awaitable<void> session::do_run()
+net::awaitable<void> session_t::do_run()
 {
     // Set suggested timeout settings for the websocket
     ws_.set_option(
@@ -51,7 +51,7 @@ net::awaitable<void> session::do_run()
         net::detached);
 }
 
-net::awaitable<void> session::read_loop()
+net::awaitable<void> session_t::read_loop()
 {
     while (true) {
         std::string str_buffer;
@@ -62,7 +62,7 @@ net::awaitable<void> session::read_loop()
     }
 }
 
-net::awaitable<void> session::write_loop()
+net::awaitable<void> session_t::write_loop()
 {
     const auto dt = std::chrono::milliseconds{17};
     auto executor = co_await net::this_coro::executor;
@@ -78,7 +78,7 @@ net::awaitable<void> session::write_loop()
     }
 }
 
-void session::handle_key(const std::string& key)
+void session_t::handle_key(const std::string& key)
 {
     spdlog::info("got key: {}", key);
     if (key == "left") {

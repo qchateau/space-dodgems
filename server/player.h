@@ -9,12 +9,13 @@
 
 namespace si {
 
-class world;
+class world_t;
 
-class player {
+class player_t {
 public:
     using id_t = uint64_t;
-    using handle = std::unique_ptr<player, std::function<void(player*)>>;
+    using clock_t = std::chrono::steady_clock;
+    using handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
     struct state_t {
         const double width{0.01};
         const double height{0.01};
@@ -23,18 +24,17 @@ public:
 
         double l1_speed() const;
     };
-    using clock_t = std::chrono::steady_clock;
 
-    player(world& world);
+    player_t(world_t& world);
 
-    player(const player&) = delete;
-    player(player&&) = delete;
+    player_t(const player_t&) = delete;
+    player_t(player_t&&) = delete;
 
-    player& operator=(const player&) = delete;
-    player& operator=(player&&) = delete;
+    player_t& operator=(const player_t&) = delete;
+    player_t& operator=(player_t&&) = delete;
 
-    bool operator==(const player&) const;
-    bool operator!=(const player&) const;
+    bool operator==(const player_t&) const;
+    bool operator!=(const player_t&) const;
 
     void set_pos(double x, double y);
     void update_pos(std::chrono::nanoseconds dt);
@@ -44,7 +44,7 @@ public:
     std::chrono::nanoseconds lifetime() const;
 
     bool is_in_world() const;
-    bool collides(const player& other) const;
+    bool collides(const player_t& other) const;
 
     void to_left();
     void to_right();
@@ -55,7 +55,7 @@ public:
 private:
     static std::atomic<id_t> id_generator_;
 
-    world& world_;
+    world_t& world_;
 
     id_t id_;
     clock_t::time_point birth_time_;

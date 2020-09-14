@@ -22,9 +22,9 @@ int main(int argc, char* argv[])
     // The io_context is required for all I/O
     net::io_context ioc{1};
 
-    auto world_ptr = std::make_shared<world>(ioc);
-    std::make_shared<listener>(ioc, *world_ptr, tcp::endpoint{address, port})->run();
-    world_ptr->run();
+    auto world = std::make_shared<world_t>(ioc);
+    std::make_shared<listener_t>(ioc, *world, tcp::endpoint{address, port})->run();
+    world->run();
 
     // Capture SIGINT and SIGTERM to perform a clean shutdown
     net::signal_set signals(ioc, SIGINT, SIGTERM);
