@@ -1,3 +1,5 @@
+const font = "Courier New";
+
 class CanvasManager {
   constructor(id) {
     this.canvas = document.getElementById(id);
@@ -7,13 +9,31 @@ class CanvasManager {
     this.ctx = this.canvas.getContext("2d");
   }
 
+  drawScore(player) {
+    const pointMultiplier = 1e3;
+
+    // draw lifetime/points
+    this.ctx.textAlign = "start";
+    this.ctx.font = "20px " + font;
+    this.ctx.fillStyle = "black";
+    let scoreStr = (player.lifetime * pointMultiplier)
+      .toFixed()
+      .padStart(8, " ");
+    this.ctx.fillText("Score: " + scoreStr, 10, 25);
+  }
+
   drawPlayer(player) {
-    const accSize = 50;
+    const accSize = 10;
 
     const widthRect = this.canvas.width * player.width;
     const heightRect = this.canvas.width * player.height;
     const x = player.x * this.canvas.width;
     const y = (1 - player.y) * this.canvas.height;
+
+    // draw score
+    if (player.is_me) {
+      this.drawScore(player);
+    }
 
     // draw acceleration line
     this.ctx.strokeStyle = "blue";
@@ -41,7 +61,7 @@ class CanvasManager {
 
   drawGameOver() {
     this.ctx.textAlign = "center";
-    this.ctx.font = "50px Verdana";
+    this.ctx.font = "50px " + font;
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
       "GAME OVER",
@@ -49,7 +69,7 @@ class CanvasManager {
       this.canvas.height / 2 - 20
     );
 
-    this.ctx.font = "20px Verdana";
+    this.ctx.font = "20px " + font;
     this.ctx.fillStyle = "black";
     this.ctx.fillText(
       "press space to retry",

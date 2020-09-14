@@ -23,6 +23,7 @@ public:
 
         double l1_speed() const;
     };
+    using clock_t = std::chrono::steady_clock;
 
     player(world& world);
 
@@ -40,6 +41,7 @@ public:
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
+    std::chrono::nanoseconds lifetime() const;
 
     bool is_in_world() const;
     bool collides(const player& other) const;
@@ -56,6 +58,7 @@ private:
     world& world_;
 
     id_t id_;
+    clock_t::time_point birth_time_;
     state_t state_;
     double acc_;
     bool alive_;

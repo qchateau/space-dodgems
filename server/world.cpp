@@ -59,6 +59,10 @@ nlohmann::json world::game_state_for_player(const player::handle& player)
             if (is_me && !p.alive()) {
                 game_over = true;
             }
+            auto lifetime =
+                std::chrono::duration_cast<std::chrono::duration<double>>(
+                    p.lifetime())
+                    .count();
             return nlohmann::json({
                 {"x", p.state().x},
                 {"y", p.state().y},
@@ -68,6 +72,7 @@ nlohmann::json world::game_state_for_player(const player::handle& player)
                 {"ddy", p.state().ddy},
                 {"width", p.state().width},
                 {"height", p.state().height},
+                {"lifetime", lifetime},
                 {"is_me", is_me},
                 {"alive", p.alive()},
             });

@@ -11,6 +11,7 @@ double player::state_t::l1_speed() const
 
 player::player(world& world)
     : id_{id_generator_.fetch_add(1)},
+      birth_time_{clock_t::now()},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},
       alive_{true},
@@ -44,6 +45,11 @@ void player::update_pos(std::chrono::nanoseconds dt)
     state_.y += state_.dy * seconds;
 }
 
+std::chrono::nanoseconds player::lifetime() const
+{
+    return clock_t::now() - birth_time_;
+}
+
 bool player::is_in_world() const
 {
     return 0 <= state_.x && state_.x < 1 && 0 <= state_.y && state_.y < 1;
@@ -60,22 +66,22 @@ bool player::collides(const player& other) const
 
 void player::to_left()
 {
-    state_.ddx -= 1;
+    state_.ddx = std::min(.0, state_.ddx - 1);
 }
 
 void player::to_right()
 {
-    state_.ddx += 1;
+    state_.ddx = std::max(.0, state_.ddx + 1);
 }
 
 void player::to_top()
 {
-    state_.ddy += 1;
+    state_.ddy = std::max(.0, state_.ddy + 1);
 }
 
 void player::to_bottom()
 {
-    state_.ddy -= 1;
+    state_.ddy = std::min(.0, state_.ddy - 1);
 }
 
 void player::kill()
