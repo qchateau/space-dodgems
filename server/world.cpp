@@ -51,11 +51,16 @@ nlohmann::json world::game_state_for_player(const player::handle& player)
             if (is_me && !p.alive()) {
                 game_over = true;
             }
-            return nlohmann::json(
-                {{"x", p.x()},
-                 {"y", p.y()},
-                 {"is_me", is_me},
-                 {"alive", p.alive()}});
+            return nlohmann::json({
+                {"x", p.state().x},
+                {"y", p.state().y},
+                {"dx", p.state().dx},
+                {"dy", p.state().dy},
+                {"ddx", p.state().ddx},
+                {"ddy", p.state().ddy},
+                {"is_me", is_me},
+                {"alive", p.alive()},
+            });
         });
 
     state["game_over"] = game_over;
@@ -88,7 +93,8 @@ void world::update(std::chrono::nanoseconds dt)
 
 bool world::is_in_world(const player& p) const
 {
-    return 0 <= p.x() && p.x() < 1 && 0 <= p.y() && p.y() < 1;
+    return 0 <= p.state().x && p.state().x < 1 && 0 <= p.state().y
+           && p.state().y < 1;
 }
 
 } // si

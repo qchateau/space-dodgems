@@ -8,8 +8,9 @@ class CanvasManager {
   }
 
   drawPlayer(player) {
-    const w = 30;
-    const h = 30;
+    const wRect = 30;
+    const hRect = 30;
+    const accSize = 50;
 
     let x = player.x * this.canvas.width;
     let y = (1 - player.y) * this.canvas.height;
@@ -22,7 +23,16 @@ class CanvasManager {
       this.ctx.fillStyle = "red";
     }
 
-    this.ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    // draw acceleration line
+    this.ctx.strokeStyle = "blue";
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x - accSize * player.ddx, y + accSize * player.ddy);
+    this.ctx.stroke();
+
+    // draw player
+    this.ctx.fillRect(x - wRect / 2, y - hRect / 2, wRect, hRect);
   }
 
   drawGameOver() {
@@ -86,7 +96,6 @@ class GameEngine {
       return;
     }
 
-    console.log("state:", msg);
     for (let player of msg.players) {
       this.canvas.drawPlayer(player);
     }

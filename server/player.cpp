@@ -6,11 +6,9 @@ std::atomic<player::id_t> player::id_generator_{0};
 
 player::player(world& world)
     : id_{id_generator_.fetch_add(1)},
-      x_{0.5},
-      y_{0.5},
-      dx_{0},
-      dy_{0},
+      state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       speed_{0.25},
+      acc_{0.25},
       alive_{true},
       world_{world}
 {
@@ -30,32 +28,30 @@ void player::update_pos(std::chrono::nanoseconds dt)
 {
     double seconds =
         std::chrono::duration_cast<std::chrono::duration<double>>(dt).count();
-    x_ += dx_ * speed_ * seconds;
-    y_ += dy_ * speed_ * seconds;
+    state_.dx += state_.ddx * acc_ * seconds;
+    state_.dy += state_.ddy * acc_ * seconds;
+    state_.x += state_.dx * speed_ * seconds;
+    state_.y += state_.dy * speed_ * seconds;
 }
 
 void player::to_left()
 {
-    dx_ = -1;
-    dy_ = 0;
+    state_.ddx -= 1;
 }
 
 void player::to_right()
 {
-    dx_ = 1;
-    dy_ = 0;
+    state_.ddx += 1;
 }
 
 void player::to_top()
 {
-    dx_ = 0;
-    dy_ = 1;
+    state_.ddy += 1;
 }
 
 void player::to_bottom()
 {
-    dx_ = 0;
-    dy_ = -1;
+    state_.ddy -= 1;
 }
 
 void player::kill()

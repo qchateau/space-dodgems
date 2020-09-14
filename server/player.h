@@ -15,6 +15,9 @@ class player {
 public:
     using id_t = uint64_t;
     using handle = std::unique_ptr<player, std::function<void(player*)>>;
+    struct state_t {
+        double x, y, dx, dy, ddx, ddy;
+    };
 
     player(world& world);
 
@@ -28,8 +31,7 @@ public:
     bool operator!=(const player&) const;
 
     void update_pos(std::chrono::nanoseconds dt);
-    auto x() const { return x_; }
-    auto y() const { return y_; }
+    const auto& state() const { return state_; };
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
 
@@ -45,11 +47,9 @@ private:
     world& world_;
 
     id_t id_;
-    double x_;
-    double y_;
-    double dx_;
-    double dy_;
+    state_t state_;
     double speed_;
+    double acc_;
     bool alive_;
 };
 } // si
