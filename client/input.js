@@ -38,35 +38,46 @@ class Input {
     this.mouseDown = false;
     this.onInput = onInput;
     this.maxDragLength = maxDragLength;
+
     element.addEventListener("touchstart", this.onTouchStart.bind(this), false);
     element.addEventListener("touchend", this.onTouchEnd.bind(this), false);
     element.addEventListener(
       "touchmove",
-      this.onTouchMove.throttle(20).bind(this)
+      this.onTouchMove.throttle(33).bind(this)
     );
 
     element.addEventListener("mousedown", this.onMouseDown.bind(this), false);
     element.addEventListener("mouseup", this.onMouseUp.bind(this), false);
     element.addEventListener(
       "mousemove",
-      this.onMouseMove.throttle(20).bind(this)
+      this.onMouseMove.throttle(33).bind(this)
     );
   }
 
   onTouchStart(e) {
-    this.touchStartX = e.changedTouches[0].screenX;
-    this.touchStartY = e.changedTouches[0].screenY;
+    this.touchStartX = e.changedTouches[0].clientX;
+    this.touchStartY = e.changedTouches[0].clientY;
+    this.onInput({
+      control: "input_ref",
+      x: this.touchStartX,
+      y: this.touchStartY,
+    });
   }
 
   onMouseDown(e) {
     this.mouseDown = true;
-    this.mouseStartX = e.screenX;
-    this.mouseStartY = e.screenY;
+    this.mouseStartX = e.clientX;
+    this.mouseStartY = e.clientY;
+    this.onInput({
+      control: "input_ref",
+      x: this.mouseStartX,
+      y: this.mouseStartY,
+    });
   }
 
   onTouchMove(e) {
-    const diffX = -(e.changedTouches[0].screenX - this.touchStartX);
-    const diffY = e.changedTouches[0].screenY - this.touchStartY;
+    const diffX = -(e.changedTouches[0].clientX - this.touchStartX);
+    const diffY = e.changedTouches[0].clientY - this.touchStartY;
     const ddx = (touchSensitivity * diffX) / this.maxDragLength;
     const ddy = (touchSensitivity * diffY) / this.maxDragLength;
     this.sendCommand(ddx, ddy);
@@ -76,18 +87,24 @@ class Input {
     if (!this.mouseDown) {
       return;
     }
-    const diffX = -(e.screenX - this.mouseStartX);
-    const diffY = e.screenY - this.mouseStartY;
+    const diffX = -(e.clientX - this.mouseStartX);
+    const diffY = e.clientY - this.mouseStartY;
     const ddx = (mouseSensitivity * diffX) / this.maxDragLength;
     const ddy = (mouseSensitivity * diffY) / this.maxDragLength;
     this.sendCommand(ddx, ddy);
   }
 
   onTouchEnd(_) {
+    this.onInput({
+      control: "input_ref_clear",
+    });
     this.endCommand();
   }
 
   onMouseUp(_) {
+    this.onInput({
+      control: "input_ref_clear",
+    });
     this.mouseDown = false;
     this.endCommand();
   }

@@ -3,10 +3,25 @@ const font = "Courier New";
 class CanvasManager {
   constructor(id) {
     this.canvas = document.getElementById(id);
-    this.refSize = Math.min(window.innerWidth, window.innerHeight);
-    this.canvas.width = this.refSize * 0.95;
-    this.canvas.height = this.refSize * 0.95;
+    const fullSize = Math.min(window.innerWidth, window.innerHeight);
+    this.margin = fullSize * 0.02;
+    this.refSize = fullSize - 2 * this.margin;
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight - 10;
     this.ctx = this.canvas.getContext("2d");
+  }
+
+  drawLimits() {
+    this.ctx.strokeStyle = "red";
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.setLineDash([5, 5]);
+    this.ctx.moveTo(this.margin, this.margin);
+    this.ctx.lineTo(this.margin + this.refSize, this.margin);
+    this.ctx.lineTo(this.margin + this.refSize, this.margin + this.refSize);
+    this.ctx.lineTo(this.margin, this.margin + this.refSize);
+    this.ctx.lineTo(this.margin, this.margin);
+    this.ctx.stroke();
   }
 
   drawScore(player) {
@@ -19,16 +34,16 @@ class CanvasManager {
     let scoreStr = (player.lifetime * pointMultiplier)
       .toFixed()
       .padStart(8, " ");
-    this.ctx.fillText("Score: " + scoreStr, 10, 25);
+    this.ctx.fillText("Score: " + scoreStr, this.margin + 10, this.margin + 25);
   }
 
   drawPlayer(player) {
     const accSize = (0.05 * this.refSize) / maxDd;
 
-    const widthRect = this.canvas.width * player.width;
-    const heightRect = this.canvas.height * player.height;
-    const x = player.x * this.canvas.width;
-    const y = (1 - player.y) * this.canvas.height;
+    const widthRect = this.refSize * player.width;
+    const heightRect = this.refSize * player.height;
+    const x = player.x * this.refSize;
+    const y = (1 - player.y) * this.refSize;
 
     // draw score
     if (player.is_me) {
@@ -39,8 +54,12 @@ class CanvasManager {
     this.ctx.strokeStyle = "blue";
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.moveTo(x, y);
-    this.ctx.lineTo(x - accSize * player.ddx, y + accSize * player.ddy);
+    this.ctx.setLineDash([]);
+    this.ctx.moveTo(this.margin + x, this.margin + y);
+    this.ctx.lineTo(
+      this.margin + x - accSize * player.ddx,
+      this.margin + y + accSize * player.ddy
+    );
     this.ctx.stroke();
 
     // draw player
@@ -51,12 +70,29 @@ class CanvasManager {
     } else {
       this.ctx.fillStyle = "red";
     }
-    this.ctx.fillRect(
-      x - widthRect / 2,
-      y - heightRect / 2,
-      widthRect,
-      heightRect
+
+    this.ctx.beginPath();
+    this.ctx.ellipse(
+      this.margin + x,
+      this.margin + y,
+      widthRect / 2,
+      heightRect / 2,
+      0,
+      0,
+      2 * Math.PI
     );
+    this.ctx.fill();
+  }
+
+  drawInputRef(x, y) {
+    if (x === null || y === null) {
+      return;
+    }
+
+    this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, 0.02 * this.refSize, 0, 2 * Math.PI);
+    this.ctx.fill();
   }
 
   drawGameOver() {
@@ -65,16 +101,16 @@ class CanvasManager {
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
       "GAME OVER",
-      this.canvas.width / 2,
-      this.canvas.height / 2 - 20
+      this.margin + this.refSize / 2,
+      this.margin + this.refSize / 2 - 20
     );
 
     this.ctx.font = "20px " + font;
     this.ctx.fillStyle = "black";
     this.ctx.fillText(
       "tap to retry",
-      this.canvas.width / 2,
-      this.canvas.height / 2 + 20
+      this.margin + this.refSize / 2,
+      this.margin + this.refSize / 2 + 20
     );
   }
 
@@ -85,6 +121,8 @@ class CanvasManager {
 
 class GameEngine {
   constructor(url, canvasId) {
+    this.inputRefX = null;
+    this.inputRefY = null;
     this.gameIsOver = false;
     this.canvas = new CanvasManager(canvasId);
     this.sock = new WebSocket(url);
@@ -104,6 +142,16 @@ class GameEngine {
     }.bind(this);
   }
 
+  clearInputRef() {
+    this.inputRefX = null;
+    this.inputRefY = null;
+  }
+
+  setInputRef(x, y) {
+    this.inputRefX = x;
+    this.inputRefY = y;
+  }
+
   onOpen() {
     console.log("Starting communication");
   }
@@ -119,12 +167,21 @@ class GameEngine {
     }
 
     this.canvas.clear();
+    this.canvas.drawLimits();
+    this.canvas.drawInputRef(this.inputRefX, this.inputRefY);
     for (let player of msg.players) {
       this.canvas.drawPlayer(player);
     }
   }
 
   onInput(input) {
+    if (input.control == "input_ref") {
+      this.setInputRef(input.x, input.y);
+      return;
+    } else if (input.control == "input_ref_clear") {
+      this.clearInputRef();
+      return;
+    }
     this.send(input);
   }
 
@@ -142,11 +199,8 @@ class GameEngine {
 class GameManager {
   constructor() {
     this.currentGame = null;
-    this.input = new Input(
-      document,
-      window.innerWidth,
-      this.onInput.bind(this)
-    );
+    const canvas = document.getElementById("canvas");
+    this.input = new Input(canvas, window.innerWidth, this.onInput.bind(this));
   }
 
   newGame() {
@@ -168,16 +222,18 @@ class GameManager {
       if (input.control == "ok") {
         this.newGame();
       }
-    } else {
-      this.currentGame.onInput(input);
+      return;
     }
+
+    this.currentGame.onInput(input);
   }
 }
 
 function startGame() {
   console.log("Running ...");
+  manager = new GameManager();
   manager.newGame();
 }
 
-manager = new GameManager();
+// manager = null;
 window.onload = startGame;
