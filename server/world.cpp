@@ -30,7 +30,7 @@ typename player_t::handle_t world_t::register_player(bool fake)
     auto& new_player = players_.emplace_back(*this, fake);
     set_initial_player_pos(new_player);
 
-    spdlog::info("registered player {}", new_player.id());
+    spdlog::debug("registered player {}", new_player.id());
 
     adjust_players();
     return {
@@ -49,7 +49,7 @@ void world_t::unregister_player(const player_t& p)
         return;
     }
     players_.erase(it);
-    spdlog::info("unregistered player {}", p.id());
+    spdlog::debug("unregistered player {}", p.id());
 
     adjust_players();
 }
@@ -66,14 +66,14 @@ void world_t::adjust_players()
 
     int missing = max_players - players_.size();
     if (missing > 0) {
-        spdlog::info("adding {} fake players", missing);
+        spdlog::debug("adding {} fake players", missing);
         for (int i = 0; i < missing; ++i) {
             fake_players_.emplace_back(register_player(true));
         }
     }
     else if (missing < 0) {
         int nr_to_remove = std::min<int>(-missing, fake_players_.size());
-        spdlog::info("removing {} fake players", nr_to_remove);
+        spdlog::debug("removing {} fake players", nr_to_remove);
         for (int i = 0; i < nr_to_remove; ++i) {
             fake_players_.pop_back();
         }
