@@ -21,12 +21,10 @@ public:
         const double height{0.01};
 
         double x, y, dx, dy, ddx, ddy;
-
-        double l1_speed() const;
     };
     static constexpr double max_dd = 5;
 
-    player_t(world_t& world);
+    player_t(world_t& world, bool fake);
 
     player_t(const player_t&) = delete;
     player_t(player_t&&) = delete;
@@ -39,13 +37,17 @@ public:
 
     void set_pos(double x, double y);
     void set_dd(double ddx, double ddy);
+    void add_score(double v) { score_ += v; }
 
     void update_pos(std::chrono::nanoseconds dt);
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
+    bool fake() const { return fake_; }
     std::chrono::nanoseconds lifetime() const;
     double score() const { return score_; }
+    double l1_speed() const;
+    double l1_distance_to(const player_t& other) const;
 
     bool is_in_world() const;
     bool collides(const player_t& other) const;
@@ -59,6 +61,7 @@ private:
     id_t id_;
     clock_t::time_point birth_time_;
     double score_;
+    bool fake_;
     state_t state_;
     double acc_;
     bool alive_;

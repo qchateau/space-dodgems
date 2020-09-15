@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 
     // Capture SIGINT and SIGTERM to perform a clean shutdown
     net::signal_set signals(ioc, SIGINT, SIGTERM);
-    signals.async_wait([&](beast::error_code const&, int) { ioc.stop(); });
+    signals.async_wait([&](const beast::error_code&, int) { ioc.stop(); });
 
     ioc.run();
 

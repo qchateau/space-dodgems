@@ -1,17 +1,16 @@
 #include "world.h"
 
+#include <algorithm>
+
 namespace si {
 
 std::atomic<player_t::id_t> player_t::id_generator_{0};
 
-double player_t::state_t::l1_speed() const
-{
-    return std::abs(dx) + std::abs(dy);
-}
-
-player_t::player_t(world_t& world)
+player_t::player_t(world_t& world, bool fake)
     : id_{id_generator_.fetch_add(1)},
       birth_time_{clock_t::now()},
+      score_{0},
+      fake_{fake},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},
       alive_{true},
@@ -57,6 +56,17 @@ void player_t::update_pos(std::chrono::nanoseconds dt)
 std::chrono::nanoseconds player_t::lifetime() const
 {
     return clock_t::now() - birth_time_;
+}
+
+double player_t::l1_speed() const
+{
+    return std::abs(state_.dx) + std::abs(state_.dy);
+}
+
+double player_t::l1_distance_to(const player_t& other) const
+{
+    return std::abs(state_.x - other.state_.x)
+           + std::abs(state_.dy - other.state_.y);
 }
 
 bool player_t::is_in_world() const
