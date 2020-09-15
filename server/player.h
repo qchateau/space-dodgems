@@ -46,8 +46,8 @@ public:
     bool fake() const { return fake_; }
     std::chrono::nanoseconds lifetime() const;
     double score() const { return score_; }
-    double l1_speed() const;
-    double l1_distance_to(const player_t& other) const;
+    double speed() const;
+    double distance_to(const player_t& other) const;
 
     bool is_in_world() const;
     bool collides(const player_t& other) const;

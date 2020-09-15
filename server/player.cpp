@@ -36,8 +36,13 @@ void player_t::set_pos(double x, double y)
 
 void player_t::set_dd(double ddx, double ddy)
 {
-    state_.ddx = std::clamp(ddx, -max_dd, max_dd);
-    state_.ddy = std::clamp(ddy, -max_dd, max_dd);
+    const double norm = std::sqrt(std::norm(std::complex<double>(ddx, ddy)));
+    if (norm > max_dd) {
+        ddx = max_dd * (ddx / norm);
+        ddy = max_dd * (ddy / norm);
+    }
+    state_.ddx = ddx;
+    state_.ddy = ddy;
 }
 
 void player_t::update_pos(std::chrono::nanoseconds dt)
@@ -58,15 +63,17 @@ std::chrono::nanoseconds player_t::lifetime() const
     return clock_t::now() - birth_time_;
 }
 
-double player_t::l1_speed() const
+double player_t::speed() const
 {
-    return std::abs(state_.dx) + std::abs(state_.dy);
+    return std::sqrt(std::norm(std::complex{state_.dx, state_.dy}));
 }
 
-double player_t::l1_distance_to(const player_t& other) const
+double player_t::distance_to(const player_t& other) const
 {
-    return std::abs(state_.x - other.state_.x)
-           + std::abs(state_.dy - other.state_.y);
+    return std::sqrt(std::norm(std::complex{
+        state_.x - other.state_.x,
+        state_.dy - other.state_.y,
+    }));
 }
 
 bool player_t::is_in_world() const

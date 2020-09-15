@@ -171,7 +171,7 @@ void world_t::update(std::chrono::nanoseconds dt)
                 continue;
             }
 
-            if (player_it->l1_speed() > other_it->l1_speed()) {
+            if (player_it->speed() > other_it->speed()) {
                 player_it->add_score(other_it->score());
                 other_it->kill();
             }
