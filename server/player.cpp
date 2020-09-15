@@ -8,14 +8,12 @@ std::atomic<player_t::id_t> player_t::id_generator_{0};
 
 player_t::player_t(world_t& world, bool fake)
     : id_{id_generator_.fetch_add(1)},
-      birth_time_{clock_t::now()},
-      score_{0},
       fake_{fake},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},
-      alive_{true},
       world_{world}
 {
+    respawn();
 }
 
 bool player_t::operator==(const player_t& other) const
@@ -43,6 +41,17 @@ void player_t::set_dd(double ddx, double ddy)
     }
     state_.ddx = ddx;
     state_.ddy = ddy;
+}
+void player_t::respawn()
+{
+    std::uniform_real_distribution<> rnd(0.1, 0.9);
+
+    state_.dx = state_.dy = state_.ddx = state_.ddy = 0;
+    state_.x = rnd(rnd_gen_);
+    state_.y = rnd(rnd_gen_);
+    alive_ = true;
+    score_ = 0;
+    birth_time_ = clock_t::now();
 }
 
 void player_t::update_pos(std::chrono::nanoseconds dt)

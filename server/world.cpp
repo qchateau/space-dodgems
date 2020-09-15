@@ -28,8 +28,6 @@ typename player_t::handle_t world_t::register_player()
 typename player_t::handle_t world_t::register_player(bool fake)
 {
     auto& new_player = players_.emplace_back(*this, fake);
-    set_initial_player_pos(new_player);
-
     spdlog::debug("registered player {}", new_player.id());
 
     adjust_players();
@@ -90,12 +88,6 @@ void world_t::run()
         net::detached);
 }
 
-void world_t::set_initial_player_pos(player_t& p)
-{
-    std::uniform_real_distribution<> rnd(0.1, 0.9);
-    p.set_pos(rnd(rnd_gen_), rnd(rnd_gen_));
-}
-
 nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
 {
     nlohmann::json state = {{"players", nlohmann::json::array()}};
@@ -153,22 +145,30 @@ void world_t::update(std::chrono::nanoseconds dt)
 {
     // update player positions
     for (player_t& p : players_) {
+        if (!p.alive()) {
+            continue;
+        }
         if (p.fake()) {
             update_fake_player_dd(p);
         }
         p.update_pos(dt);
-        if (!p.is_in_world()) {
-            p.kill();
-        }
     }
 
     // check for collisions
     for (auto player_it = begin(players_); player_it != end(players_);
          ++player_it) {
+        if (!player_it->alive()) {
+            continue;
+        }
+
+        if (!player_it->is_in_world()) {
+            player_it->kill();
+        }
+
         for (auto other_it = ++decltype(player_it)(player_it);
              other_it != end(players_);
              ++other_it) {
-            if (!player_it->collides(*other_it)) {
+            if (!other_it->alive() || !player_it->collides(*other_it)) {
                 continue;
             }
 

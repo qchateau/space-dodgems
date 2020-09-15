@@ -82,11 +82,12 @@ net::awaitable<void> session_t::write_loop()
 
 void session_t::handle_command(const nlohmann::json& command)
 {
+    if (!player_->alive() && command.contains("respawn")) {
+        player_->respawn();
+    }
+
     if (command.contains("ddx") && command.contains("ddy")) {
         player_->set_dd(command["ddx"].get<double>(), command["ddy"].get<double>());
-    }
-    else {
-        spdlog::warn("bad command: {}", command.dump());
     }
 }
 

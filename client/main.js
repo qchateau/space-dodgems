@@ -9,6 +9,8 @@ class CanvasManager {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight - 10;
     this.ctx = this.canvas.getContext("2d");
+    this.smallFont = "20px " + font;
+    this.bigFont = "50px " + font;
   }
 
   drawLimits() {
@@ -27,7 +29,7 @@ class CanvasManager {
   drawScore(player) {
     // draw lifetime/points
     this.ctx.textAlign = "start";
-    this.ctx.font = "20px " + font;
+    this.ctx.font = this.smallFont;
     this.ctx.fillStyle = "white";
     let scoreStr = player.score.toFixed().padStart(8, " ");
     this.ctx.fillText("Score: " + scoreStr, this.margin + 10, this.margin + 25);
@@ -96,7 +98,7 @@ class CanvasManager {
 
   drawGameOver() {
     this.ctx.textAlign = "center";
-    this.ctx.font = "50px " + font;
+    this.ctx.font = this.bigFont;
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
       "GAME OVER",
@@ -104,7 +106,7 @@ class CanvasManager {
       this.margin + this.refSize / 2 - 20
     );
 
-    this.ctx.font = "20px " + font;
+    this.ctx.font = this.smallFont;
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "tap to retry",
@@ -174,13 +176,22 @@ class GameEngine {
   }
 
   onInput(input) {
+    if (this.gameIsOver) {
+      if (input.ok) {
+        this.restartGame();
+      }
+      return;
+    }
+
     if (input.control == "input_ref") {
       this.setInputRef(input.x, input.y);
       return;
-    } else if (input.control == "input_ref_clear") {
+    }
+    if (input.control == "input_ref_clear") {
       this.clearInputRef();
       return;
     }
+
     this.send(input);
   }
 
@@ -189,9 +200,13 @@ class GameEngine {
   }
 
   gameOver() {
-    this.sock.close();
     this.canvas.drawGameOver();
     this.gameIsOver = true;
+  }
+
+  restartGame() {
+    this.gameIsOver = false;
+    this.send({ command: { respawn: true } });
   }
 }
 
@@ -214,13 +229,6 @@ class GameManager {
 
   onInput(input) {
     if (!this.currentGame) {
-      return;
-    }
-
-    if (this.currentGame.gameIsOver) {
-      if (input.ok) {
-        this.newGame();
-      }
       return;
     }
 

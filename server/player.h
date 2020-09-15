@@ -3,6 +3,7 @@
 #include <atomic>
 #include <list>
 #include <memory>
+#include <random>
 #include <spdlog/spdlog.h>
 
 #include "config.h"
@@ -38,8 +39,9 @@ public:
     void set_pos(double x, double y);
     void set_dd(double ddx, double ddy);
     void add_score(double v) { score_ += v; }
-
+    void respawn();
     void update_pos(std::chrono::nanoseconds dt);
+
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
     bool alive() const { return alive_; }
@@ -58,6 +60,7 @@ private:
 
     world_t& world_;
 
+    std::mt19937 rnd_gen_{std::random_device{}()};
     id_t id_;
     clock_t::time_point birth_time_;
     double score_;
