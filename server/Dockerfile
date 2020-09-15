@@ -22,4 +22,4 @@ RUN apt-get install -y lld-10 libc++abi-10-dev
 
 COPY . .
 
-CMD ./build.sh && ./build/bin/server $BIND_IP $PORT
+CMD ["/bin/bash", "-c", "./build.sh && ./build/bin/server $BIND_IP $PORT"]
