@@ -1,4 +1,4 @@
-const font = "Courier New";
+const font = "Roboto Mono";
 
 class CanvasManager {
   constructor(id) {
