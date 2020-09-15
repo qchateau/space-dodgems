@@ -4,11 +4,11 @@
 
 namespace si {
 
-session_t::session_t(world_t& world, tcp::socket&& socket)
-    : world_{world}, ws_{std::move(socket)}
+session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
+    : world_{std::move(world)}, ws_{std::move(socket)}
 {
     spdlog::info("new session {:p}", static_cast<void*>(this));
-    player_ = world.register_player();
+    player_ = world_->register_player();
 }
 
 session_t::~session_t()
@@ -72,7 +72,7 @@ net::awaitable<void> session_t::write_loop()
     timer.expires_from_now(std::chrono::seconds{0});
 
     while (true) {
-        auto msg = world_.game_state_for_player(player_).dump();
+        auto msg = world_->game_state_for_player(player_).dump();
         co_await ws_.async_write(net::buffer(msg), net::use_awaitable);
 
         timer.expires_at(timer.expires_at() + dt);

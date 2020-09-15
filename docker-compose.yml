@@ -27,3 +27,4 @@ services:
     environment:
       - BIND_IP=0.0.0.0
       - PORT=5678
+      - NWORLDS=10

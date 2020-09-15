@@ -21,4 +21,4 @@ WORKDIR /opt/server/
 
 COPY . .
 
-CMD ["/bin/bash", "-c", "./build.sh && ./build/bin/server $BIND_IP $PORT"]
+CMD ["/bin/bash", "-c", "./build.sh && ./build/bin/server $BIND_IP $PORT $NWORLDS"]

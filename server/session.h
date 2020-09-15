@@ -12,7 +12,7 @@ namespace si {
 
 class session_t : public std::enable_shared_from_this<session_t> {
 public:
-    session_t(world_t& world, tcp::socket&& socket);
+    session_t(std::shared_ptr<world_t> world, tcp::socket&& socket);
     ~session_t();
 
     session_t(const session_t&) = delete;
@@ -30,7 +30,7 @@ private:
 
     void handle_command(const nlohmann::json& command);
 
-    world_t& world_;
+    std::shared_ptr<world_t> world_;
     player_t::handle_t player_;
     websocket::stream<beast::tcp_stream> ws_;
 };

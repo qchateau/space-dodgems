@@ -15,7 +15,10 @@ class world_t;
 
 class listener_t : public std::enable_shared_from_this<listener_t> {
 public:
-    listener_t(net::io_context& ioc, world_t& world, tcp::endpoint endpoint);
+    listener_t(
+        net::io_context& ioc,
+        std::vector<std::shared_ptr<world_t>> worlds,
+        tcp::endpoint endpoint);
 
     void run();
 
@@ -24,7 +27,7 @@ private:
 
     net::io_context& ioc_;
     tcp::acceptor acceptor_;
-    world_t& world_;
+    std::vector<std::shared_ptr<world_t>> worlds_;
 };
 
 } // si
