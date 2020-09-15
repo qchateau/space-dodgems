@@ -2,6 +2,7 @@ version: "3.2"
 
 volumes:
   conandata:
+  builddata:
 
 services:
   nginx:
@@ -21,6 +22,7 @@ services:
       context: ./server
     volumes:
       - conandata:/root/.conan/
+      - builddata:/opt/server/build/
       - ./server/:/opt/server/
     environment:
       - BIND_IP=0.0.0.0
