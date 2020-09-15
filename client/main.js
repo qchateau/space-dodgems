@@ -9,8 +9,26 @@ class CanvasManager {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight - 10;
     this.ctx = this.canvas.getContext("2d");
+    this.lastDrawTime = Date.now();
     this.smallFont = "20px " + font;
     this.bigFont = "50px " + font;
+  }
+
+  drawFps() {
+    const now = Date.now();
+    const dt = now - this.lastDrawTime;
+    const fps = 1000.0 / dt;
+    const fpsStr = fps.toFixed().padStart(3, " ");
+
+    this.lastDrawTime = now;
+    this.ctx.textAlign = "end";
+    this.ctx.font = this.smallFont;
+    this.ctx.fillStyle = "white";
+    this.ctx.fillText(
+      "FPS: " + fpsStr,
+      this.refSize + this.margin - 10,
+      this.margin + 25
+    );
   }
 
   drawLimits() {
@@ -168,6 +186,7 @@ class GameEngine {
     }
 
     this.canvas.clear();
+    this.canvas.drawFps();
     this.canvas.drawLimits();
     this.canvas.drawInputRef(this.inputRefX, this.inputRefY);
     for (let player of msg.players) {
