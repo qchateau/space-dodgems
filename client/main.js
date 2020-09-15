@@ -133,12 +133,13 @@ class CanvasManager {
     );
   }
 
-  drawConnectionError() {
+  drawError(text) {
+    this.clear();
     this.ctx.textAlign = "center";
     this.ctx.font = this.bigFont;
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
-      "CONNECTION ERROR",
+      text.toUpperCase(),
       this.margin + this.refSize / 2,
       this.margin + this.refSize / 2 - 20
     );
@@ -155,9 +156,15 @@ class GameEngine {
     this.inputRefY = null;
     this.gameIsOver = false;
     this.canvas = new CanvasManager(canvasId);
+
     this.sock = new WebSocket(url);
+
     this.sock.onopen = function () {
       this.onOpen();
+    }.bind(this);
+
+    this.sock.onclose = function (event) {
+      this.onClose(event);
     }.bind(this);
 
     // Log errors
@@ -186,9 +193,14 @@ class GameEngine {
     console.log("Starting communication");
   }
 
+  onClose(event) {
+    console.log("Closing communication:", event);
+    this.canvas.drawError(event.reason);
+  }
+
   onError(error) {
     console.error("WebSocket error", error);
-    this.canvas.drawConnectionError();
+    this.canvas.drawError("CONNECTION ERROR");
   }
 
   onMessage(msg) {
@@ -260,6 +272,12 @@ class GameManager {
 
   onInput(input) {
     if (!this.currentGame) {
+      return;
+    }
+
+    const CLOSED = 3;
+    if (this.currentGame.sock.readyState == CLOSED && input.ok) {
+      this.newGame();
       return;
     }
 
