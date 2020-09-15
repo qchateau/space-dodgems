@@ -112,8 +112,7 @@ class CanvasManager {
   }
 
   clear() {
-    this.ctx.fillStyle = "black";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
 

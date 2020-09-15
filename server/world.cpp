@@ -217,9 +217,12 @@ void world_t::update_fake_player_dd(player_t& p)
         }
     }
 
+    constexpr double fake_player_speed_factor = 2;
     const auto dx = closest_x - p.state().x;
     const auto dy = closest_y - p.state().y;
-    p.set_dd(dx * player_t::max_dd, dy * player_t::max_dd);
+    p.set_dd(
+        fake_player_speed_factor * dx * player_t::max_dd,
+        fake_player_speed_factor * dy * player_t::max_dd);
 }
 
 } // si
