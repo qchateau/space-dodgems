@@ -27,12 +27,14 @@ private:
     net::awaitable<void> do_run();
     net::awaitable<void> read_loop();
     net::awaitable<void> write_loop();
+    net::awaitable<void> keepalive();
 
     void handle_command(const nlohmann::json& command);
 
     std::shared_ptr<world_t> world_;
     player_t::handle_t player_;
     websocket::stream<beast::tcp_stream> ws_;
+    net::steady_timer timer_;
 };
 
 } // si

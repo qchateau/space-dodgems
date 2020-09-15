@@ -4,8 +4,12 @@
 
 namespace si {
 
+namespace {
+constexpr auto keepalive_period = std::chrono::seconds{10};
+}
+
 session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
-    : world_{std::move(world)}, ws_{std::move(socket)}
+    : world_{std::move(world)}, ws_{std::move(socket)}, timer_{ws_.get_executor()}
 {
     spdlog::info("new session {:p}", static_cast<void*>(this));
     player_ = world_->register_player();
@@ -49,6 +53,12 @@ net::awaitable<void> session_t::do_run()
             co_await self->write_loop();
         },
         net::detached);
+    net::co_spawn(
+        executor,
+        [self = shared_from_this()]() -> net::awaitable<void> {
+            co_await self->keepalive();
+        },
+        net::detached);
 }
 
 net::awaitable<void> session_t::read_loop()
@@ -61,6 +71,7 @@ net::awaitable<void> session_t::read_loop()
         if (msg.contains("command")) {
             handle_command(msg["command"]);
         }
+        timer_.cancel();
     }
 }
 
@@ -77,6 +88,32 @@ net::awaitable<void> session_t::write_loop()
 
         timer.expires_at(timer.expires_at() + dt);
         co_await timer.async_wait(net::use_awaitable);
+    }
+}
+
+net::awaitable<void> session_t::keepalive()
+{
+    while (ws_.is_open()) {
+        try {
+            timer_.expires_from_now(keepalive_period);
+            co_await timer_.async_wait(net::use_awaitable);
+            if (player_->alive()) {
+                // still alive despite no command, let this one open
+                continue;
+            }
+            ws_.close(beast::websocket::close_reason{"idle for too long"});
+        }
+        catch (const boost::system::system_error& exc) {
+            if (exc.code() == net::error::operation_aborted) {
+                continue;
+            }
+            spdlog::error("unexpected exception: {}", exc.what());
+            ws_.close(beast::websocket::close_reason{exc.what()});
+        }
+        catch (const std::exception& exc) {
+            spdlog::error("unexpected exception: {}", exc.what());
+            ws_.close(beast::websocket::close_reason{exc.what()});
+        }
     }
 }
 
