@@ -29,15 +29,15 @@ class Input {
     this.onInput = onInput;
     this.maxDragLength = maxDragLength;
 
-    element.addEventListener("touchstart", this.onTouchStart.bind(this), false);
-    element.addEventListener("touchend", this.onTouchEnd.bind(this), false);
+    element.addEventListener("touchstart", this.onTouchStart.bind(this));
+    element.addEventListener("touchend", this.onTouchEnd.bind(this));
     element.addEventListener(
       "touchmove",
       this.onTouchMove.throttle(33).bind(this)
     );
 
-    element.addEventListener("mousedown", this.onMouseDown.bind(this), false);
-    element.addEventListener("mouseup", this.onMouseUp.bind(this), false);
+    element.addEventListener("mousedown", this.onMouseDown.bind(this));
+    element.addEventListener("mouseup", this.onMouseUp.bind(this));
     element.addEventListener(
       "mousemove",
       this.onMouseMove.throttle(33).bind(this)
@@ -45,6 +45,7 @@ class Input {
   }
 
   onTouchStart(e) {
+    e.preventDefault(); // very important, otherwise chrome throttles inputs
     this.touchStartX = e.changedTouches[0].clientX;
     this.touchStartY = e.changedTouches[0].clientY;
     this.onInput({
