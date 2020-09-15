@@ -48,6 +48,7 @@ class Input {
     this.touchStartX = e.changedTouches[0].clientX;
     this.touchStartY = e.changedTouches[0].clientY;
     this.onInput({
+      ok: true,
       control: "input_ref",
       x: this.touchStartX,
       y: this.touchStartY,
@@ -59,6 +60,7 @@ class Input {
     this.mouseStartX = e.clientX;
     this.mouseStartY = e.clientY;
     this.onInput({
+      ok: true,
       control: "input_ref",
       x: this.mouseStartX,
       y: this.mouseStartY,
@@ -104,6 +106,6 @@ class Input {
   }
 
   endCommand() {
-    this.onInput({ control: "ok", command: { ddx: 0, ddy: 0 } });
+    this.onInput({ command: { ddx: 0, ddy: 0 } });
   }
 }

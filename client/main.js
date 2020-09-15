@@ -217,7 +217,7 @@ class GameManager {
     }
 
     if (this.currentGame.gameIsOver) {
-      if (input.control == "ok") {
+      if (input.ok) {
         this.newGame();
       }
       return;
