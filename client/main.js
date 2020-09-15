@@ -133,6 +133,17 @@ class CanvasManager {
     );
   }
 
+  drawConnectionError() {
+    this.ctx.textAlign = "center";
+    this.ctx.font = this.bigFont;
+    this.ctx.fillStyle = "red";
+    this.ctx.fillText(
+      "CONNECTION ERROR",
+      this.margin + this.refSize / 2,
+      this.margin + this.refSize / 2 - 20
+    );
+  }
+
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
@@ -177,6 +188,7 @@ class GameEngine {
 
   onError(error) {
     console.error("WebSocket error", error);
+    this.canvas.drawConnectionError();
   }
 
   onMessage(msg) {
