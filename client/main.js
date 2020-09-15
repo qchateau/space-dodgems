@@ -63,9 +63,11 @@ class CanvasManager {
     if (player.is_me) {
       this.ctx.fillStyle = "rgb(0, 255, 0)";
     } else if (!player.alive) {
-      this.ctx.fillStyle = "black";
-    } else {
+      this.ctx.fillStyle = "rgb(50, 50, 50)";
+    } else if (!player.fake) {
       this.ctx.fillStyle = "rgb(255, 0, 0)";
+    } else {
+      this.ctx.fillStyle = "rgb(255, 100, 0)";
     }
 
     this.ctx.beginPath();

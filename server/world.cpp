@@ -127,6 +127,7 @@ nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
                 {"score", p.score()},
                 {"is_me", is_me},
                 {"alive", p.alive()},
+                {"fake", p.fake()},
             });
         });
 
