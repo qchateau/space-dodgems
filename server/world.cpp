@@ -149,14 +149,13 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
 
 net::awaitable<void> world_t::on_run()
 {
-    const auto dt = std::chrono::milliseconds{17};
     auto executor = co_await net::this_coro::executor;
     net::steady_timer timer{executor};
     timer.expires_from_now(std::chrono::seconds{0});
 
     while (true) {
-        update(dt);
-        timer.expires_at(timer.expires_at() + dt);
+        update(world_t::refresh_dt);
+        timer.expires_at(timer.expires_at() + refresh_dt);
         co_await timer.async_wait(net::use_awaitable);
     }
 }

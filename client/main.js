@@ -9,7 +9,7 @@ class CanvasManager {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight - 10;
     this.ctx = this.canvas.getContext("2d");
-    this.lastDrawTime = Date.now();
+    this.lastDrawTimes = [Date.now()];
     const smallFontSize = this.getSmallFontSize();
     this.verySmallFont = (0.5 * smallFontSize).toFixed() + "px " + font;
     this.smallFont = smallFontSize.toFixed() + "px " + font;
@@ -30,21 +30,22 @@ class CanvasManager {
     return fontsize;
   }
 
-  drawFps() {
-    const now = Date.now();
-    const dt = now - this.lastDrawTime;
-    const fps = 1000.0 / dt;
-    const fpsStr = fps.toFixed().padStart(3, " ");
+  drawTicksPerSecond() {
+    this.lastDrawTimes.push(Date.now());
+    this.lastDrawTimes = this.lastDrawTimes.slice(-10);
+    const dt =
+      this.lastDrawTimes[this.lastDrawTimes.length - 1] - this.lastDrawTimes[0];
+    const tps = ((this.lastDrawTimes.length - 1) * 1000.0) / dt;
+    const tpsStr = Math.round(tps).toFixed().padStart(3, " ");
 
-    this.lastDrawTime = now;
-    this.ctx.font = this.smallFont;
+    this.ctx.font = this.verySmallFont;
     this.ctx.textAlign = "end";
-    this.ctx.textBaseline = "hanging";
+    this.ctx.textBaseline = "bottom";
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
-      "FPS: " + fpsStr,
+      "ticks/s: " + tpsStr,
       this.refSize + this.margin - 10,
-      this.margin + 10
+      this.refSize + this.margin - 10
     );
   }
 
@@ -276,7 +277,7 @@ class GameEngine {
     }
 
     this.canvas.clear();
-    this.canvas.drawFps();
+    this.canvas.drawTicksPerSecond();
     this.canvas.drawLimits();
     this.canvas.drawInputRef(this.inputRefX, this.inputRefY);
     for (let player of msg.players) {
@@ -323,7 +324,11 @@ class GameManager {
   constructor() {
     this.currentGame = null;
     const canvas = document.getElementById("canvas");
-    this.input = new Input(canvas, window.innerWidth, this.onInput.bind(this));
+    this.input = new Input(
+      canvas,
+      Math.min(window.innerWidth, window.innerHeight),
+      this.onInput.bind(this)
+    );
   }
 
   newGame() {

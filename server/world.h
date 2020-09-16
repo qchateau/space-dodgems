@@ -21,6 +21,7 @@ public:
 
 class world_t : public std::enable_shared_from_this<world_t> {
 public:
+    static constexpr auto refresh_dt = std::chrono::milliseconds{20};
     static constexpr std::size_t max_players = 8;
 
     world_t(net::io_context& ioc);

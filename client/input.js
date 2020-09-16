@@ -1,6 +1,7 @@
 const maxDd = 5;
 const touchSensitivity = 5 * maxDd;
-const mouseSensitivity = 10 * maxDd;
+const mouseSensitivity = 5 * maxDd;
+const inputFrequency = 30;
 
 Function.prototype.throttle = function (milliseconds, context) {
   var baseFunction = this,
@@ -33,14 +34,14 @@ class Input {
     element.addEventListener("touchend", this.onTouchEnd.bind(this));
     element.addEventListener(
       "touchmove",
-      this.onTouchMove.throttle(33).bind(this)
+      this.onTouchMove.throttle(1.0 / inputFrequency).bind(this)
     );
 
     element.addEventListener("mousedown", this.onMouseDown.bind(this));
     element.addEventListener("mouseup", this.onMouseUp.bind(this));
     element.addEventListener(
       "mousemove",
-      this.onMouseMove.throttle(33).bind(this)
+      this.onMouseMove.throttle(1.0 / inputFrequency).bind(this)
     );
   }
 

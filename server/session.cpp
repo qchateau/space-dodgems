@@ -115,7 +115,6 @@ net::awaitable<void> session_t::read_loop()
 
 net::awaitable<void> session_t::write_loop()
 {
-    const auto dt = std::chrono::milliseconds{17};
     auto executor = co_await net::this_coro::executor;
     net::steady_timer timer(executor);
     timer.expires_from_now(std::chrono::seconds{0});
@@ -124,7 +123,7 @@ net::awaitable<void> session_t::write_loop()
         auto msg = world_->game_state_for_player(player_).dump();
         co_await ws_.async_write(net::buffer(msg), net::use_awaitable);
 
-        timer.expires_at(timer.expires_at() + dt);
+        timer.expires_at(timer.expires_at() + world_t::refresh_dt);
         co_await timer.async_wait(net::use_awaitable);
     }
 }
