@@ -1,6 +1,6 @@
 const maxDd = 5;
 const touchSensitivity = 5 * maxDd;
-const mouseSensitivity = 25 * maxDd;
+const mouseSensitivity = 10 * maxDd;
 
 Function.prototype.throttle = function (milliseconds, context) {
   var baseFunction = this,
