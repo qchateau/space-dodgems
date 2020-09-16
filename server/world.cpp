@@ -127,6 +127,7 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
                     p->lifetime())
                     .count();
             return nlohmann::json({
+                {"id", p->id()},
                 {"x", p->state().x},
                 {"y", p->state().y},
                 {"dx", p->state().dx},

@@ -85,7 +85,7 @@ class CanvasManager {
     // draw acceleration line
     this.ctx.strokeStyle = "rgb(150, 150, 150)";
 
-    this.ctx.lineWidth = 2;
+    this.ctx.lineWidth = 1.5;
     this.ctx.beginPath();
     this.ctx.setLineDash([]);
     this.ctx.moveTo(this.margin + x, this.margin + y);
@@ -96,6 +96,7 @@ class CanvasManager {
     this.ctx.stroke();
 
     // draw player
+    this.ctx.beginPath();
     if (player.is_me) {
       this.ctx.fillStyle = "rgb(0, 255, 0)";
     } else if (!player.alive) {
@@ -106,11 +107,23 @@ class CanvasManager {
       this.ctx.fillStyle = "rgb(255, 100, 0)";
     }
 
-    this.ctx.beginPath();
+    this.strokeStyle = "black";
     this.ctx.arc(
       this.margin + x,
       this.margin + y,
       playerSize / 2,
+      0,
+      2 * Math.PI
+    );
+    this.ctx.stroke();
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "black";
+    this.ctx.arc(
+      this.margin + x,
+      this.margin + y,
+      playerSize / 5,
       0,
       2 * Math.PI
     );
