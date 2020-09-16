@@ -11,8 +11,6 @@
 
 namespace si {
 
-class world_t;
-
 class listener_t : public std::enable_shared_from_this<listener_t> {
 public:
     listener_t(

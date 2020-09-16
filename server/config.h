@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+#include <memory>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
@@ -18,5 +20,12 @@ struct use_awaitable_executor {
 
 template <typename T>
 using use_awaitable_executor_t = typename use_awaitable_executor<T>::type;
+
+class session_t;
+class listener_t;
+class world_t;
+class player_t;
+
+using player_handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
 
 } // si

@@ -38,11 +38,13 @@ net::awaitable<void> listener_t::on_run()
         auto socket = co_await acceptor_.async_accept(net::use_awaitable);
         bool found_world = false;
         for (auto& world_ptr : worlds_) {
-            if (world_ptr->available_places() > 0) {
-                std::make_shared<session_t>(world_ptr, std::move(socket))->run();
-                found_world = true;
-                break;
+            if (world_ptr->available_places() == 0) {
+                continue;
             }
+
+            std::make_shared<session_t>(world_ptr, std::move(socket))->run();
+            found_world = true;
+            break;
         }
     }
 }

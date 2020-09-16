@@ -10,13 +10,10 @@
 
 namespace si {
 
-class world_t;
-
 class player_t {
 public:
     using id_t = uint64_t;
     using clock_t = std::chrono::steady_clock;
-    using handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
     struct state_t {
         const double width{0.01};
         const double height{0.01};
@@ -69,4 +66,5 @@ private:
     double acc_;
     bool alive_;
 };
+
 } // si

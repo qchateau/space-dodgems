@@ -4,9 +4,10 @@
 #include <vector>
 
 #include <boost/beast.hpp>
+#include <nlohmann/json.hpp>
 
 #include "config.h"
-#include "world.h"
+#include "player.h"
 
 namespace si {
 
@@ -22,6 +23,7 @@ public:
     session_t& operator=(session_t&&) = delete;
 
     void run();
+    tcp::endpoint remote_endpoint() const;
 
 private:
     net::awaitable<void> do_run();
@@ -32,7 +34,7 @@ private:
     void handle_command(const nlohmann::json& command);
 
     std::shared_ptr<world_t> world_;
-    player_t::handle_t player_;
+    player_handle_t player_;
     websocket::stream<beast::tcp_stream> ws_;
     net::steady_timer timer_;
 };

@@ -1,4 +1,5 @@
 #include "session.h"
+#include "world.h"
 
 #include <spdlog/spdlog.h>
 
@@ -11,13 +12,13 @@ constexpr auto keepalive_period = std::chrono::seconds{10};
 session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
     : world_{std::move(world)}, ws_{std::move(socket)}, timer_{ws_.get_executor()}
 {
-    spdlog::info("new session {:p}", static_cast<void*>(this));
+    spdlog::info("new session from {}", remote_endpoint().address().to_string());
     player_ = world_->register_player();
 }
 
 session_t::~session_t()
 {
-    spdlog::info("closing session {:p}", static_cast<void*>(this));
+    spdlog::info("closing session from {}", remote_endpoint().address().to_string());
 }
 
 void session_t::run()
@@ -28,6 +29,11 @@ void session_t::run()
             co_await self->do_run();
         },
         net::detached);
+}
+
+tcp::endpoint session_t::remote_endpoint() const
+{
+    return ws_.next_layer().socket().remote_endpoint();
 }
 
 net::awaitable<void> session_t::do_run()

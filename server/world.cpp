@@ -1,14 +1,17 @@
 #include "world.h"
+#include "player.h"
 
 namespace si {
 
 world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
 
+world_t::~world_t() = default;
+
 int world_t::real_players() const
 {
     int real_players = 0;
-    for (const player_t& p : players_) {
-        if (!p.fake()) {
+    for (const auto& p : players_) {
+        if (!p->fake()) {
             ++real_players;
         }
     }
@@ -20,19 +23,20 @@ int world_t::available_places() const
     return max_players - real_players();
 }
 
-typename player_t::handle_t world_t::register_player()
+player_handle_t world_t::register_player()
 {
     return register_player(false);
 }
 
-typename player_t::handle_t world_t::register_player(bool fake)
+player_handle_t world_t::register_player(bool fake)
 {
-    auto& new_player = players_.emplace_back(*this, fake);
-    spdlog::debug("registered player {}", new_player.id());
+    auto& new_player = players_.emplace_back(
+        std::make_unique<player_t>(*this, fake));
+    spdlog::debug("registered player {}", new_player->id());
 
-    adjust_players();
+    net::post(ioc_, [this]() { adjust_players(); });
     return {
-        &new_player,
+        new_player.get(),
         [self = shared_from_this()](player_t* p) { self->unregister_player(*p); },
     };
 }
@@ -40,7 +44,7 @@ typename player_t::handle_t world_t::register_player(bool fake)
 void world_t::unregister_player(const player_t& p)
 {
     auto it = find_if(begin(players_), end(players_), [&](const auto& player) {
-        return p == player;
+        return p == *player;
     });
     if (it == end(players_)) {
         spdlog::warn("unregistered unknown player {}", p.id());
@@ -49,7 +53,7 @@ void world_t::unregister_player(const player_t& p)
     players_.erase(it);
     spdlog::debug("unregistered player {}", p.id());
 
-    adjust_players();
+    net::post(ioc_, [this]() { adjust_players(); });
 }
 
 void world_t::adjust_players()
@@ -88,7 +92,7 @@ void world_t::run()
         net::detached);
 }
 
-nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
+nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
 {
     nlohmann::json state = {{"players", nlohmann::json::array()}};
 
@@ -98,28 +102,28 @@ nlohmann::json world_t::game_state_for_player(const player_t::handle_t& player)
         end(players_),
         back_inserter(state["players"]),
         [&](const auto& p) {
-            bool is_me = p == *player;
-            if (is_me && !p.alive()) {
+            bool is_me = *p == *player;
+            if (is_me && !p->alive()) {
                 game_over = true;
             }
             auto lifetime =
                 std::chrono::duration_cast<std::chrono::duration<double>>(
-                    p.lifetime())
+                    p->lifetime())
                     .count();
             return nlohmann::json({
-                {"x", p.state().x},
-                {"y", p.state().y},
-                {"dx", p.state().dx},
-                {"dy", p.state().dy},
-                {"ddx", p.state().ddx},
-                {"ddy", p.state().ddy},
-                {"width", p.state().width},
-                {"height", p.state().height},
+                {"x", p->state().x},
+                {"y", p->state().y},
+                {"dx", p->state().dx},
+                {"dy", p->state().dy},
+                {"ddx", p->state().ddx},
+                {"ddy", p->state().ddy},
+                {"width", p->state().width},
+                {"height", p->state().height},
                 {"lifetime", lifetime},
-                {"score", p.score()},
+                {"score", p->score()},
                 {"is_me", is_me},
-                {"alive", p.alive()},
-                {"fake", p.fake()},
+                {"alive", p->alive()},
+                {"fake", p->fake()},
             });
         });
 
@@ -144,41 +148,43 @@ net::awaitable<void> world_t::on_run()
 void world_t::update(std::chrono::nanoseconds dt)
 {
     // update player positions
-    for (player_t& p : players_) {
-        if (!p.alive()) {
+    for (auto& p : players_) {
+        if (!p->alive()) {
             continue;
         }
-        if (p.fake()) {
-            update_fake_player_dd(p);
+        if (p->fake()) {
+            update_fake_player_dd(*p);
         }
-        p.update_pos(dt);
+        p->update_pos(dt);
     }
 
     // check for collisions
     for (auto player_it = begin(players_); player_it != end(players_);
          ++player_it) {
-        if (!player_it->alive()) {
+        auto& player = **player_it;
+        if (!player.alive()) {
             continue;
         }
 
-        if (!player_it->is_in_world()) {
-            player_it->kill();
+        if (!player.is_in_world()) {
+            player.kill();
         }
 
         for (auto other_it = ++decltype(player_it)(player_it);
              other_it != end(players_);
              ++other_it) {
-            if (!other_it->alive() || !player_it->collides(*other_it)) {
+            auto& other = **other_it;
+            if (!other.alive() || !player.collides(other)) {
                 continue;
             }
 
-            if (player_it->speed() > other_it->speed()) {
-                player_it->add_score(other_it->score());
-                other_it->kill();
+            if (player.speed() > other.speed()) {
+                player.add_score(other.score());
+                other.kill();
             }
             else {
-                other_it->add_score(player_it->score());
-                player_it->kill();
+                other.add_score(player.score());
+                player.kill();
             }
         }
     }
@@ -205,7 +211,8 @@ void world_t::update_fake_player_dd(player_t& p)
     double closest_y = 0.5;
     double closest_distance = l1_dist_to(closest_x, closest_y);
 
-    for (const player_t& other : players_) {
+    for (const auto& other_ptr : players_) {
+        auto& other = *other_ptr;
         if (p == other) {
             continue;
         }

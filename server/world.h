@@ -4,11 +4,11 @@
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
 #include "config.h"
-#include "player.h"
 
 namespace si {
 
@@ -17,15 +17,16 @@ public:
     static constexpr std::size_t max_players = 8;
 
     world_t(net::io_context& ioc);
+    ~world_t();
     void run();
 
-    nlohmann::json game_state_for_player(const player_t::handle_t& player);
-    typename player_t::handle_t register_player();
+    nlohmann::json game_state_for_player(const player_handle_t& player);
+    player_handle_t register_player();
     int real_players() const;
     int available_places() const;
 
 private:
-    typename player_t::handle_t register_player(bool fake);
+    player_handle_t register_player(bool fake);
     void unregister_player(const player_t& p);
     void adjust_players();
 
@@ -34,9 +35,8 @@ private:
     void update_fake_player_dd(player_t& p);
 
     net::io_context& ioc_;
-    std::list<player_t> players_;
-
-    std::list<player_t::handle_t> fake_players_;
+    std::vector<std::unique_ptr<player_t>> players_;
+    std::list<player_handle_t> fake_players_;
 };
 
 } // si

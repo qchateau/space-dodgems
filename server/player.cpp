@@ -1,3 +1,4 @@
+#include "player.h"
 #include "world.h"
 
 #include <algorithm>
