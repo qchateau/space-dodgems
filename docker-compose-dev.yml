@@ -5,8 +5,8 @@ volumes:
   builddata:
 
 services:
-  image: qchateau/space-dodgems:dev
   backend:
+    image: qchateau/space-dodgems:dev
     build:
       target: dev
     volumes:
