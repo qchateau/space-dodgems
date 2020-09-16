@@ -11,6 +11,7 @@ class CanvasManager {
     this.ctx = this.canvas.getContext("2d");
     this.lastDrawTime = Date.now();
     const smallFontSize = this.getSmallFontSize();
+    this.verySmallFont = (0.5 * smallFontSize).toFixed() + "px " + font;
     this.smallFont = smallFontSize.toFixed() + "px " + font;
     this.mediumFont = (1.5 * smallFontSize).toFixed() + "px " + font;
     this.bigFont = (2.5 * smallFontSize).toFixed() + "px " + font;
@@ -114,6 +115,14 @@ class CanvasManager {
       2 * Math.PI
     );
     this.ctx.fill();
+
+    // draw player score
+    this.ctx.font = this.verySmallFont;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "hanging";
+    this.ctx.fillStyle = "white";
+    let scoreStr = player.score.toFixed();
+    this.ctx.fillText(scoreStr, this.margin + x, this.margin + y + playerSize);
   }
 
   drawInputRef(x, y) {
@@ -338,5 +347,4 @@ function startGame() {
   manager.newGame();
 }
 
-// manager = null;
 window.onload = startGame;
