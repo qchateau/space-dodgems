@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-namespace si {
+namespace de {
 
 class player_t {
 public:
@@ -63,4 +63,4 @@ private:
     bool alive_;
 };
 
-} // si
+} // de

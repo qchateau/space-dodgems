@@ -1,8 +1,6 @@
-# experimental-ws-game
+# Space Dodgems
 
-Trying out boost.beast with C++20 coroutines and websockets.
-
-Maybe this will become a mini-game one day.
+This is a mini-game created with boost.beast, C++20 coroutines and websockets.
 
 ## How to run
 

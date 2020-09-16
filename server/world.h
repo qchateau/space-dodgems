@@ -12,7 +12,7 @@
 
 #include "config.h"
 
-namespace si {
+namespace de {
 
 class player_already_registered : public std::runtime_error {
 public:
@@ -48,4 +48,4 @@ private:
     boost::uuids::random_generator uuid_generator_;
 };
 
-} // si
+} // de

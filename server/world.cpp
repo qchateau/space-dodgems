@@ -3,7 +3,7 @@
 
 #include <boost/uuid/uuid_io.hpp>
 
-namespace si {
+namespace de {
 
 world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
 
@@ -248,4 +248,4 @@ void world_t::update_fake_player_dd(player_t& p)
         fake_player_speed_factor * dy * player_t::max_dd);
 }
 
-} // si
+} // de

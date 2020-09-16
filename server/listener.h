@@ -9,7 +9,7 @@
 
 #include "config.h"
 
-namespace si {
+namespace de {
 
 class listener_t : public std::enable_shared_from_this<listener_t> {
 public:
@@ -28,4 +28,4 @@ private:
     std::vector<std::shared_ptr<world_t>> worlds_;
 };
 
-} // si
+} // de

@@ -6,7 +6,7 @@
 #include <boost/beast.hpp>
 #include <boost/uuid/uuid.hpp>
 
-namespace si {
+namespace de {
 
 namespace beast = boost::beast;
 namespace net = boost::asio;
@@ -30,4 +30,4 @@ class player_t;
 using player_id_t = boost::uuids::uuid;
 using player_handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
 
-} // si
+} // de

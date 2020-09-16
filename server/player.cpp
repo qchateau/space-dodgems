@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace si {
+namespace de {
 
 player_t::player_t(world_t& world, id_t id, bool fake)
     : id_{id},
@@ -102,4 +102,4 @@ void player_t::kill()
     alive_ = false;
 }
 
-} // si
+} // de

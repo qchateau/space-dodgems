@@ -2,7 +2,7 @@
 #include "session.h"
 #include "world.h"
 
-namespace si {
+namespace de {
 
 listener_t::listener_t(
     net::io_context& ioc,
@@ -49,4 +49,4 @@ net::awaitable<void> listener_t::on_run()
     }
 }
 
-} // si
+} // de

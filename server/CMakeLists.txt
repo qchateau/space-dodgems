@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.2)
-project(spaceinvader_server)
+project(server)
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
