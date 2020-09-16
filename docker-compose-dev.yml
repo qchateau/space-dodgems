@@ -1,0 +1,15 @@
+version: "3.4"
+
+volumes:
+  conandata:
+  builddata:
+
+services:
+  image: qchateau/space-dodgems:dev
+  backend:
+    build:
+      target: dev
+    volumes:
+      - ./server/:/opt/server/
+      - conandata:/root/.conan/
+      - builddata:/opt/server/build/

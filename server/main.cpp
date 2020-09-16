@@ -6,19 +6,34 @@
 
 using namespace sd;
 
+constexpr auto addr_envvar = "ADDR";
+constexpr auto port_envvar = "PORT";
+constexpr auto nworlds_envvar = "NWORLDS";
+
 int main(int argc, char* argv[])
 {
-    // Check command line arguments.
-    if (argc != 4) {
-        std::cerr << "Usage: server <address> <port> <nworlds>\n"
-                  << "Example:\n"
-                  << "    server 0.0.0.0 8080 1\n";
+    const auto mb_address = std::getenv(addr_envvar);
+    if (!mb_address) {
+        std::cerr << "Environment variable " << addr_envvar << " is not defined"
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
+    const auto mb_port = std::getenv(port_envvar);
+    if (!mb_address) {
+        std::cerr << "Environment variable " << port_envvar << " is not defined"
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
+    const auto mb_nworlds = std::getenv(nworlds_envvar);
+    if (!mb_address) {
+        std::cerr << "Environment variable " << nworlds_envvar
+                  << " is not defined" << std::endl;
         return EXIT_FAILURE;
     }
 
-    const auto address = net::ip::make_address(argv[1]);
-    const auto port = static_cast<unsigned short>(std::atoi(argv[2]));
-    const auto nworlds = std::atoi(argv[3]);
+    const auto address = net::ip::make_address(mb_address);
+    const auto port = static_cast<unsigned short>(std::atoi(mb_port));
+    const auto nworlds = std::atoi(mb_nworlds);
 
     // The io_context is required for all I/O
     net::io_context ioc{1};

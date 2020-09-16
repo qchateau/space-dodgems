@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3.4"
 
 volumes:
   conandata:
@@ -12,19 +12,17 @@ services:
       - ./nginx:/etc/nginx/templates
       - ./client:/www/data
     ports:
-      - "8080:80"
+      - "${EXTERNAL_PORT-8080}:80"
     environment:
       - WS_SERVER=backend:5678
 
   backend:
     restart: always
+    image: qchateau/space-dodgems:latest
     build:
       context: ./server
-    volumes:
-      - conandata:/root/.conan/
-      - builddata:/opt/server/build/
-      - ./server/:/opt/server/
+      target: release
     environment:
-      - BIND_IP=0.0.0.0
+      - ADDR=0.0.0.0
       - PORT=5678
-      - NWORLDS=10
+      - NWORLDS=${NWORLDS-10}
