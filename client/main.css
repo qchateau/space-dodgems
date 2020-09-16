@@ -3,6 +3,14 @@ Hack to disable pull to refresh on chrome
 https://w3bits.com/prevent-chrome-pull-to-refresh-css/#:~:text=When%20being%20at%20the%20very,then%20set%20it%20to%20Disable.
 */
 
+#preloadfont {
+  opacity: 0;
+  height: 0;
+  width: 0;
+  display: inline-block;
+  position: absolute;
+}
+
 body {
   overscroll-behavior-y: none;
   background-color: black;

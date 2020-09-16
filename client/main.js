@@ -10,8 +10,19 @@ class CanvasManager {
     this.canvas.height = window.innerHeight - 10;
     this.ctx = this.canvas.getContext("2d");
     this.lastDrawTime = Date.now();
-    this.smallFont = "20px " + font;
-    this.bigFont = "50px " + font;
+    const smallFontSize = this.getSmallFontSize();
+    this.smallFont = smallFontSize.toFixed() + "px " + font;
+    this.bigFont = (2.5 * smallFontSize).toFixed() + "px " + font;
+  }
+
+  getSmallFontSize() {
+    const text = "abcdefghijklmnopqrstuvwxyz";
+    let fontsize = 200;
+    do {
+      fontsize--;
+      this.ctx.font = fontsize + "px " + font;
+    } while (this.ctx.measureText(text).width > 0.5 * this.refSize);
+    return fontsize;
   }
 
   drawFps() {
@@ -21,13 +32,14 @@ class CanvasManager {
     const fpsStr = fps.toFixed().padStart(3, " ");
 
     this.lastDrawTime = now;
-    this.ctx.textAlign = "end";
     this.ctx.font = this.smallFont;
+    this.ctx.textAlign = "end";
+    this.ctx.textBaseline = "hanging";
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "FPS: " + fpsStr,
       this.refSize + this.margin - 10,
-      this.margin + 25
+      this.margin + 10
     );
   }
 
@@ -45,12 +57,12 @@ class CanvasManager {
   }
 
   drawScore(player) {
-    // draw lifetime/points
-    this.ctx.textAlign = "start";
     this.ctx.font = this.smallFont;
+    this.ctx.textAlign = "start";
+    this.ctx.textBaseline = "hanging";
     this.ctx.fillStyle = "white";
     let scoreStr = player.score.toFixed().padStart(8, " ");
-    this.ctx.fillText("Score: " + scoreStr, this.margin + 10, this.margin + 25);
+    this.ctx.fillText("Score: " + scoreStr, this.margin + 10, this.margin + 10);
   }
 
   drawPlayer(player) {
@@ -115,21 +127,24 @@ class CanvasManager {
   }
 
   drawGameOver() {
-    this.ctx.textAlign = "center";
     this.ctx.font = this.bigFont;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "bottom";
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
       "GAME OVER",
       this.margin + this.refSize / 2,
-      this.margin + this.refSize / 2 - 20
+      this.margin + this.refSize / 2 - 5
     );
 
     this.ctx.font = this.smallFont;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "top";
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "tap to retry",
       this.margin + this.refSize / 2,
-      this.margin + this.refSize / 2 + 20
+      this.margin + this.refSize / 2 + 5
     );
   }
 
