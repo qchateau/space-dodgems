@@ -42,7 +42,10 @@ player_handle_t world_t::register_player(const player_id_t& player_id, bool fake
 
     auto& new_player = players_.emplace_back(
         std::make_unique<player_t>(*this, player_id, fake));
-    spdlog::debug("registered player {}", to_string(new_player->id()));
+
+    if (!fake) {
+        spdlog::info("registered player {}", to_string(new_player->id()));
+    }
 
     net::post(ioc_, [this]() { adjust_players(); });
     return {
@@ -61,7 +64,10 @@ void world_t::unregister_player(const player_t& p)
         return;
     }
     players_.erase(it);
-    spdlog::debug("unregistered player {}", to_string(p.id()));
+
+    if (!p.fake()) {
+        spdlog::info("unregistered player {}", to_string(p.id()));
+    }
 
     net::post(ioc_, [this]() { adjust_players(); });
 }

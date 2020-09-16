@@ -30,6 +30,7 @@ private:
     net::awaitable<void> read_loop();
     net::awaitable<void> write_loop();
     net::awaitable<void> keepalive();
+    void cleanup();
 
     void handle_command(const nlohmann::json& command);
     void handle_input(const nlohmann::json& input);

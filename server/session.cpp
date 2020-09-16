@@ -86,10 +86,17 @@ net::awaitable<void> session_t::do_run()
 
 net::awaitable<void> session_t::read_loop()
 {
-    while (true) {
+    while (ws_.is_open()) {
         std::string str_buffer;
         auto buffer = net::dynamic_buffer(str_buffer);
-        co_await ws_.async_read(buffer, net::use_awaitable);
+
+        try {
+            co_await ws_.async_read(buffer, net::use_awaitable);
+        }
+        catch (const boost::system::system_error&) {
+            break;
+        }
+
         auto msg = nlohmann::json::parse(str_buffer);
         if (msg.contains("command")) {
             handle_command(msg["command"]);
@@ -97,8 +104,13 @@ net::awaitable<void> session_t::read_loop()
         if (msg.contains("input")) {
             handle_input(msg["input"]);
         }
+
         timer_.cancel();
     }
+
+    // handle socket errors/close in read_loop
+    // because it's where it's easier
+    cleanup();
 }
 
 net::awaitable<void> session_t::write_loop()
@@ -108,7 +120,7 @@ net::awaitable<void> session_t::write_loop()
     net::steady_timer timer(executor);
     timer.expires_from_now(std::chrono::seconds{0});
 
-    while (true) {
+    while (ws_.is_open()) {
         auto msg = world_->game_state_for_player(player_).dump();
         co_await ws_.async_write(net::buffer(msg), net::use_awaitable);
 
@@ -141,6 +153,18 @@ net::awaitable<void> session_t::keepalive()
             ws_.close(beast::websocket::close_reason{exc.what()});
         }
     }
+}
+
+void session_t::cleanup()
+{
+    // most likely the socket is already closed
+    // but make close it nonetheless to ensure the
+    // session will end asap
+    boost::system::error_code ec;
+    ws_.close(beast::websocket::close_reason{"session closed"}, ec);
+
+    // cancel the timer so that the keepalive coroutine returns asap
+    timer_.cancel();
 }
 
 void session_t::handle_command(const nlohmann::json& command)
