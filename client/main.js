@@ -335,8 +335,13 @@ class GameManager {
     if (this.currentGame) {
       this.currentGame.gameOver();
     }
+
+    let location = window.location.pathname.toString();
+    if (location[location.length - 1] == "/") {
+      location = location.substring(0, -1);
+    }
     this.currentGame = new GameEngine(
-      "ws://" + window.location.hostname + ":" + window.location.port + "/ws",
+      "ws://" + window.location.host + location + "/ws",
       "canvas"
     );
   }
