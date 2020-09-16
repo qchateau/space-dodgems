@@ -91,11 +91,10 @@ bool player_t::is_in_world() const
 
 bool player_t::collides(const player_t& other) const
 {
-    const auto width = state_.width / 2 + other.state_.width / 2;
-    const auto height = state_.height / 2 + other.state_.height / 2;
-    const auto dist_x = std::abs(other.state_.x - state_.x);
-    const auto dist_y = std::abs(other.state_.y - state_.y);
-    return dist_x < width && dist_y < height;
+    const auto size = state_.size / 2 + other.state_.size / 2;
+    const auto dist = std::sqrt(std::norm(
+        std::complex{other.state_.x - state_.x, other.state_.y - state_.y}));
+    return dist < size;
 }
 
 void player_t::kill()

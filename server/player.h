@@ -14,8 +14,7 @@ public:
     using id_t = player_id_t;
     using clock_t = std::chrono::steady_clock;
     struct state_t {
-        const double width{0.01};
-        const double height{0.01};
+        const double size{0.01};
 
         double x, y, dx, dy, ddx, ddy;
     };

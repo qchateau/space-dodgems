@@ -72,8 +72,7 @@ class CanvasManager {
   drawPlayer(player) {
     const accSize = (0.05 * this.refSize) / maxDd;
 
-    const widthRect = this.refSize * player.width;
-    const heightRect = this.refSize * player.height;
+    const playerSize = this.refSize * player.size;
     const x = player.x * this.refSize;
     const y = (1 - player.y) * this.refSize;
 
@@ -107,12 +106,10 @@ class CanvasManager {
     }
 
     this.ctx.beginPath();
-    this.ctx.ellipse(
+    this.ctx.arc(
       this.margin + x,
       this.margin + y,
-      widthRect / 2,
-      heightRect / 2,
-      0,
+      playerSize / 2,
       0,
       2 * Math.PI
     );
@@ -237,7 +234,7 @@ class GameEngine {
   }
 
   onClose(event) {
-    console.log("Closing communication:", event);
+    console.log("Closing communication");
     if (event.reason) {
       this.canvas.drawError(event.reason);
     } else {
