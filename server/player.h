@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <list>
 #include <memory>
 #include <random>
@@ -12,7 +11,7 @@ namespace si {
 
 class player_t {
 public:
-    using id_t = uint64_t;
+    using id_t = player_id_t;
     using clock_t = std::chrono::steady_clock;
     struct state_t {
         const double width{0.01};
@@ -22,7 +21,7 @@ public:
     };
     static constexpr double max_dd = 5;
 
-    player_t(world_t& world, bool fake);
+    player_t(world_t& world, id_t id, bool fake);
 
     player_t(const player_t&) = delete;
     player_t(player_t&&) = delete;
@@ -53,8 +52,6 @@ public:
     void kill();
 
 private:
-    static std::atomic<id_t> id_generator_;
-
     world_t& world_;
 
     std::mt19937 rnd_gen_{std::random_device{}()};

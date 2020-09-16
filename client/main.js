@@ -12,16 +12,20 @@ class CanvasManager {
     this.lastDrawTime = Date.now();
     const smallFontSize = this.getSmallFontSize();
     this.smallFont = smallFontSize.toFixed() + "px " + font;
+    this.mediumFont = (1.5 * smallFontSize).toFixed() + "px " + font;
     this.bigFont = (2.5 * smallFontSize).toFixed() + "px " + font;
   }
 
   getSmallFontSize() {
+    // text and textSize are references, they don't matter
+    // but they affect the text size
     const text = "abcdefghijklmnopqrstuvwxyz";
-    let fontsize = 200;
+    const textSize = 0.5 * this.refSize;
+    let fontsize = 50;
     do {
       fontsize--;
       this.ctx.font = fontsize + "px " + font;
-    } while (this.ctx.measureText(text).width > 0.5 * this.refSize);
+    } while (this.ctx.measureText(text).width > textSize);
     return fontsize;
   }
 
@@ -150,9 +154,11 @@ class CanvasManager {
 
   drawError(text) {
     this.clear();
+    this.ctx.font = this.mediumFont;
     this.ctx.textAlign = "center";
-    this.ctx.font = this.bigFont;
+    this.ctx.textBaseline = "middle";
     this.ctx.fillStyle = "red";
+
     this.ctx.fillText(
       text.toUpperCase(),
       this.margin + this.refSize / 2,
@@ -167,6 +173,7 @@ class CanvasManager {
 
 class GameEngine {
   constructor(url, canvasId) {
+    this.playerId = this.getPlayerId();
     this.inputRefX = null;
     this.inputRefY = null;
     this.gameIsOver = false;
@@ -194,6 +201,26 @@ class GameEngine {
     }.bind(this);
   }
 
+  getPlayerId() {
+    if (window.localStorage.playerId === undefined) {
+      function uuidv4() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
+
+      const id = uuidv4();
+      console.log("new player ID: ", id);
+      window.localStorage.playerId = id;
+    }
+    return window.localStorage.playerId;
+  }
+
   clearInputRef() {
     this.inputRefX = null;
     this.inputRefY = null;
@@ -206,11 +233,16 @@ class GameEngine {
 
   onOpen() {
     console.log("Starting communication");
+    this.send({ command: { register: this.playerId } });
   }
 
   onClose(event) {
     console.log("Closing communication:", event);
-    this.canvas.drawError(event.reason);
+    if (event.reason) {
+      this.canvas.drawError(event.reason);
+    } else {
+      this.canvas.drawError("CONNECTION CLOSED");
+    }
   }
 
   onError(error) {
@@ -235,22 +267,22 @@ class GameEngine {
 
   onInput(input) {
     if (this.gameIsOver) {
-      if (input.ok) {
+      if (input.startInput) {
         this.restartGame();
       }
       return;
     }
 
-    if (input.control == "input_ref") {
+    if (input.startInput) {
       this.setInputRef(input.x, input.y);
       return;
     }
-    if (input.control == "input_ref_clear") {
+    if (input.endInput) {
       this.clearInputRef();
       return;
     }
 
-    this.send(input);
+    this.send({ input: input });
   }
 
   send(msg) {
@@ -286,17 +318,20 @@ class GameManager {
   }
 
   onInput(input) {
+    const CLOSED = 3;
+    const OPEN = 1;
     if (!this.currentGame) {
       return;
     }
 
-    const CLOSED = 3;
-    if (this.currentGame.sock.readyState == CLOSED && input.ok) {
+    if (this.currentGame.sock.readyState == CLOSED && input.startInput) {
       this.newGame();
       return;
     }
 
-    this.currentGame.onInput(input);
+    if (this.currentGame.sock.readyState == OPEN) {
+      this.currentGame.onInput(input);
+    }
   }
 }
 

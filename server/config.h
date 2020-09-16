@@ -4,6 +4,7 @@
 #include <memory>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
+#include <boost/uuid/uuid.hpp>
 
 namespace si {
 
@@ -26,6 +27,7 @@ class listener_t;
 class world_t;
 class player_t;
 
+using player_id_t = boost::uuids::uuid;
 using player_handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
 
 } // si

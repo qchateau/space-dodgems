@@ -1,6 +1,7 @@
 #include "session.h"
 #include "world.h"
 
+#include <boost/uuid/string_generator.hpp>
 #include <spdlog/spdlog.h>
 
 namespace si {
@@ -10,10 +11,12 @@ constexpr auto keepalive_period = std::chrono::seconds{10};
 }
 
 session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
-    : world_{std::move(world)}, ws_{std::move(socket)}, timer_{ws_.get_executor()}
+    : world_{std::move(world)},
+      ws_{std::move(socket)},
+      remote_endpoint_{ws_.next_layer().socket().remote_endpoint()},
+      timer_{ws_.get_executor()}
 {
     spdlog::info("new session from {}", remote_endpoint().address().to_string());
-    player_ = world_->register_player();
 }
 
 session_t::~session_t()
@@ -31,11 +34,6 @@ void session_t::run()
         net::detached);
 }
 
-tcp::endpoint session_t::remote_endpoint() const
-{
-    return ws_.next_layer().socket().remote_endpoint();
-}
-
 net::awaitable<void> session_t::do_run()
 {
     // Set suggested timeout settings for the websocket
@@ -44,6 +42,25 @@ net::awaitable<void> session_t::do_run()
 
     // Accept the websocket handshake
     co_await ws_.async_accept(net::use_awaitable);
+
+    // Handle client registration
+    std::string str_buffer;
+    auto buffer = net::dynamic_buffer(str_buffer);
+    co_await ws_.async_read(buffer, net::use_awaitable);
+    auto player_id = nlohmann::json::parse(str_buffer)["command"]["register"];
+    if (!player_id.is_string()) {
+        spdlog::warn("client failed to register");
+        co_return;
+    }
+
+    try {
+        player_ = world_->register_player(
+            boost::uuids::string_generator{}(player_id.get<std::string>()));
+    }
+    catch (const player_already_registered& exc) {
+        ws_.close(beast::websocket::close_reason{exc.what()});
+        co_return;
+    }
 
     // Start the receive and send loops
     auto executor = co_await net::this_coro::executor;
@@ -76,6 +93,9 @@ net::awaitable<void> session_t::read_loop()
         auto msg = nlohmann::json::parse(str_buffer);
         if (msg.contains("command")) {
             handle_command(msg["command"]);
+        }
+        if (msg.contains("input")) {
+            handle_input(msg["input"]);
         }
         timer_.cancel();
     }
@@ -128,9 +148,12 @@ void session_t::handle_command(const nlohmann::json& command)
     if (!player_->alive() && command.contains("respawn")) {
         player_->respawn();
     }
+}
 
-    if (command.contains("ddx") && command.contains("ddy")) {
-        player_->set_dd(command["ddx"].get<double>(), command["ddy"].get<double>());
+void session_t::handle_input(const nlohmann::json& input)
+{
+    if (input.contains("ddx") && input.contains("ddy")) {
+        player_->set_dd(input["ddx"].get<double>(), input["ddy"].get<double>());
     }
 }
 

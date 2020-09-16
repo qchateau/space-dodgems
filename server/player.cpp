@@ -5,10 +5,8 @@
 
 namespace si {
 
-std::atomic<player_t::id_t> player_t::id_generator_{0};
-
-player_t::player_t(world_t& world, bool fake)
-    : id_{id_generator_.fetch_add(1)},
+player_t::player_t(world_t& world, id_t id, bool fake)
+    : id_{id},
       fake_{fake},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},

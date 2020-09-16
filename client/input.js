@@ -49,8 +49,7 @@ class Input {
     this.touchStartX = e.changedTouches[0].clientX;
     this.touchStartY = e.changedTouches[0].clientY;
     this.onInput({
-      ok: true,
-      control: "input_ref",
+      startInput: true,
       x: this.touchStartX,
       y: this.touchStartY,
     });
@@ -61,8 +60,7 @@ class Input {
     this.mouseStartX = e.clientX;
     this.mouseStartY = e.clientY;
     this.onInput({
-      ok: true,
-      control: "input_ref",
+      startInput: true,
       x: this.mouseStartX,
       y: this.mouseStartY,
     });
@@ -89,24 +87,24 @@ class Input {
 
   onTouchEnd(_) {
     this.onInput({
-      control: "input_ref_clear",
+      endInput: true,
     });
     this.endCommand();
   }
 
   onMouseUp(_) {
     this.onInput({
-      control: "input_ref_clear",
+      endInput: true,
     });
     this.mouseDown = false;
     this.endCommand();
   }
 
   sendCommand(ddx, ddy) {
-    this.onInput({ command: { ddx: ddx, ddy: ddy } });
+    this.onInput({ ddx: ddx, ddy: ddy });
   }
 
   endCommand() {
-    this.onInput({ command: { ddx: 0, ddy: 0 } });
+    this.onInput({ ddx: 0, ddy: 0 });
   }
 }

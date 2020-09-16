@@ -23,7 +23,7 @@ public:
     session_t& operator=(session_t&&) = delete;
 
     void run();
-    tcp::endpoint remote_endpoint() const;
+    tcp::endpoint remote_endpoint() const { return remote_endpoint_; }
 
 private:
     net::awaitable<void> do_run();
@@ -32,10 +32,12 @@ private:
     net::awaitable<void> keepalive();
 
     void handle_command(const nlohmann::json& command);
+    void handle_input(const nlohmann::json& input);
 
     std::shared_ptr<world_t> world_;
     player_handle_t player_;
     websocket::stream<beast::tcp_stream> ws_;
+    const tcp::endpoint remote_endpoint_;
     net::steady_timer timer_;
 };
 

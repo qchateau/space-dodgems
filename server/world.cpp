@@ -1,6 +1,8 @@
 #include "world.h"
 #include "player.h"
 
+#include <boost/uuid/uuid_io.hpp>
+
 namespace si {
 
 world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
@@ -23,16 +25,24 @@ int world_t::available_places() const
     return max_players - real_players();
 }
 
-player_handle_t world_t::register_player()
+player_handle_t world_t::register_player(const player_id_t& player_id)
 {
-    return register_player(false);
+    return register_player(player_id, false);
 }
 
-player_handle_t world_t::register_player(bool fake)
+player_handle_t world_t::register_player(const player_id_t& player_id, bool fake)
 {
+    auto player_it = find_if(begin(players_), end(players_), [&](const auto& p) {
+        return p->id() == player_id;
+    });
+    if (player_it != end(players_)) {
+        // player already registered
+        throw player_already_registered{};
+    }
+
     auto& new_player = players_.emplace_back(
-        std::make_unique<player_t>(*this, fake));
-    spdlog::debug("registered player {}", new_player->id());
+        std::make_unique<player_t>(*this, player_id, fake));
+    spdlog::debug("registered player {}", to_string(new_player->id()));
 
     net::post(ioc_, [this]() { adjust_players(); });
     return {
@@ -47,11 +57,11 @@ void world_t::unregister_player(const player_t& p)
         return p == *player;
     });
     if (it == end(players_)) {
-        spdlog::warn("unregistered unknown player {}", p.id());
+        spdlog::warn("unregistered unknown player {}", to_string(p.id()));
         return;
     }
     players_.erase(it);
-    spdlog::debug("unregistered player {}", p.id());
+    spdlog::debug("unregistered player {}", to_string(p.id()));
 
     net::post(ioc_, [this]() { adjust_players(); });
 }
@@ -70,7 +80,7 @@ void world_t::adjust_players()
     if (missing > 0) {
         spdlog::debug("adding {} fake players", missing);
         for (int i = 0; i < missing; ++i) {
-            fake_players_.emplace_back(register_player(true));
+            fake_players_.emplace_back(register_player(uuid_generator_(), true));
         }
     }
     else if (missing < 0) {
