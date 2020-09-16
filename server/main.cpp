@@ -4,7 +4,7 @@
 #include "listener.h"
 #include "world.h"
 
-using namespace de;
+using namespace sd;
 
 int main(int argc, char* argv[])
 {

@@ -9,7 +9,7 @@
 #include "config.h"
 #include "player.h"
 
-namespace de {
+namespace sd {
 
 class session_t : public std::enable_shared_from_this<session_t> {
 public:
@@ -42,4 +42,4 @@ private:
     net::steady_timer timer_;
 };
 
-} // de
+} // sd

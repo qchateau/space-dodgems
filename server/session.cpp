@@ -4,7 +4,7 @@
 #include <boost/uuid/string_generator.hpp>
 #include <spdlog/spdlog.h>
 
-namespace de {
+namespace sd {
 
 namespace {
 constexpr auto keepalive_period = std::chrono::seconds{10};
@@ -180,4 +180,4 @@ void session_t::handle_input(const nlohmann::json& input)
     }
 }
 
-} // de
+} // sd
