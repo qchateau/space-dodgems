@@ -11,7 +11,7 @@ class CanvasManager {
     this.ctx = this.canvas.getContext("2d");
     this.lastDrawTimes = [Date.now()];
     const smallFontSize = this.getSmallFontSize();
-    this.verySmallFont = (0.5 * smallFontSize).toFixed() + "px " + font;
+    this.verySmallFont = (0.65 * smallFontSize).toFixed() + "px " + font;
     this.smallFont = smallFontSize.toFixed() + "px " + font;
     this.mediumFont = (1.5 * smallFontSize).toFixed() + "px " + font;
     this.bigFont = (2.5 * smallFontSize).toFixed() + "px " + font;
