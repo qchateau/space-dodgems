@@ -18,7 +18,7 @@ services:
 
   backend:
     restart: always
-    image: qchateau/space-dodgems:latest
+    image: qchateau/space-dodgems:${BACKEND_TAG-latest}
     build:
       context: ./server
       target: release
