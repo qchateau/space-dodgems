@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <random>
+#include <string_view>
 #include <vector>
 
 #include <boost/uuid/random_generator.hpp>
@@ -29,12 +30,17 @@ public:
     void run();
 
     nlohmann::json game_state_for_player(const player_handle_t& player);
-    player_handle_t register_player(const player_id_t& player_id);
+    player_handle_t register_player(
+        const player_id_t& player_id,
+        std::string_view player_name);
     int real_players() const;
     int available_places() const;
 
 private:
-    player_handle_t register_player(const player_id_t& player_id, bool fake);
+    player_handle_t register_player(
+        const player_id_t& player_id,
+        std::string_view player_name,
+        bool fake);
     void unregister_player(const player_t& p);
     void adjust_players();
 

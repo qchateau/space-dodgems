@@ -3,4 +3,5 @@ build/
 .vs-code/
 .clangd/
 
+.env
 compile_commands.json

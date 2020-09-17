@@ -1,9 +1,42 @@
 #include "world.h"
 #include "player.h"
 
+#include <array>
+
 #include <boost/uuid/uuid_io.hpp>
 
 namespace sd {
+
+namespace {
+
+std::string get_fake_player_name(
+    const std::vector<std::unique_ptr<player_t>>& current_players)
+{
+    static const auto names = std::array{
+        "Rambo",
+        "Borg",
+        "Chuck Norris",
+        "Bruce Lee",
+        "Hubert Bonisseur de La Bath",
+        "Mickey O'Neil",
+        "Luke",
+        "Spock",
+    };
+    int idx = 0;
+    for (; idx < names.size() - 1; ++idx) {
+        const auto& name = names[idx];
+        auto it = find_if(
+            begin(current_players), end(current_players), [&](const auto& p) {
+                return name == p->name();
+            });
+        if (it == end(current_players)) {
+            break;
+        }
+    }
+    return names[idx];
+}
+
+}
 
 world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
 
@@ -25,12 +58,17 @@ int world_t::available_places() const
     return max_players - real_players();
 }
 
-player_handle_t world_t::register_player(const player_id_t& player_id)
+player_handle_t world_t::register_player(
+    const player_id_t& player_id,
+    std::string_view player_name)
 {
-    return register_player(player_id, false);
+    return register_player(player_id, player_name, false);
 }
 
-player_handle_t world_t::register_player(const player_id_t& player_id, bool fake)
+player_handle_t world_t::register_player(
+    const player_id_t& player_id,
+    std::string_view player_name,
+    bool fake)
 {
     auto player_it = find_if(begin(players_), end(players_), [&](const auto& p) {
         return p->id() == player_id;
@@ -41,7 +79,7 @@ player_handle_t world_t::register_player(const player_id_t& player_id, bool fake
     }
 
     auto& new_player = players_.emplace_back(
-        std::make_unique<player_t>(*this, player_id, fake));
+        std::make_unique<player_t>(*this, player_id, player_name, fake));
 
     if (!fake) {
         spdlog::info("registered player {}", to_string(new_player->id()));
@@ -86,7 +124,8 @@ void world_t::adjust_players()
     if (missing > 0) {
         spdlog::debug("adding {} fake players", missing);
         for (int i = 0; i < missing; ++i) {
-            fake_players_.emplace_back(register_player(uuid_generator_(), true));
+            fake_players_.emplace_back(register_player(
+                uuid_generator_(), get_fake_player_name(players_), true));
         }
     }
     else if (missing < 0) {
@@ -128,6 +167,7 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
                     .count();
             return nlohmann::json({
                 {"id", p->id()},
+                {"name", p->name()},
                 {"x", p->state().x},
                 {"y", p->state().y},
                 {"dx", p->state().dx},

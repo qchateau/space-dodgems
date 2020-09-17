@@ -8,6 +8,12 @@ namespace sd {
 
 namespace {
 constexpr auto keepalive_period = std::chrono::seconds{10};
+
+bool player_name_is_valid(std::string_view name)
+{
+    return name.size() >= 3 && name.size() <= 30;
+}
+
 }
 
 session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
@@ -47,15 +53,26 @@ net::awaitable<void> session_t::do_run()
     std::string str_buffer;
     auto buffer = net::dynamic_buffer(str_buffer);
     co_await ws_.async_read(buffer, net::use_awaitable);
-    auto player_id = nlohmann::json::parse(str_buffer)["command"]["register"];
-    if (!player_id.is_string()) {
+    auto registration = nlohmann::json::parse(
+        str_buffer)["command"]["register"];
+    auto player_id = registration["id"];
+    auto player_name = registration["name"];
+
+    if (!player_id.is_string() || !player_name.is_string()) {
         spdlog::warn("client failed to register");
+        ws_.close(beast::websocket::close_reason{"registration error"});
+        co_return;
+    }
+
+    if (!player_name_is_valid(player_name.get<std::string>())) {
+        ws_.close(beast::websocket::close_reason{"invalid name"});
         co_return;
     }
 
     try {
         player_ = world_->register_player(
-            boost::uuids::string_generator{}(player_id.get<std::string>()));
+            boost::uuids::string_generator{}(player_id.get<std::string>()),
+            player_name.get<std::string>());
     }
     catch (const player_already_registered& exc) {
         ws_.close(beast::websocket::close_reason{exc.what()});

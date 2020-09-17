@@ -1,13 +1,12 @@
 const font = "Roboto Mono";
 
 class CanvasManager {
-  constructor(id) {
-    this.canvas = document.getElementById(id);
-    const fullSize = Math.min(window.innerWidth, window.innerHeight);
+  constructor(htmlCanvas) {
+    this.canvas = htmlCanvas;
+    const fullSize = Math.min(this.canvas.width, this.canvas.height);
+
     this.margin = fullSize * 0.02;
-    this.refSize = fullSize - 2 * this.margin;
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight - 10;
+    this.innerSize = fullSize - 2 * this.margin;
     this.ctx = this.canvas.getContext("2d");
     this.lastDrawTimes = [Date.now()];
     const smallFontSize = this.getSmallFontSize();
@@ -21,7 +20,7 @@ class CanvasManager {
     // text and textSize are references, they don't matter
     // but they affect the text size
     const text = "abcdefghijklmnopqrstuvwxyz";
-    const textSize = 0.5 * this.refSize;
+    const textSize = 0.5 * this.innerSize;
     let fontsize = 50;
     do {
       fontsize--;
@@ -44,8 +43,8 @@ class CanvasManager {
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "ticks/s: " + tpsStr,
-      this.refSize + this.margin - 10,
-      this.refSize + this.margin - 10
+      this.innerSize + this.margin - 10,
+      this.innerSize + this.margin - 10
     );
   }
 
@@ -55,9 +54,9 @@ class CanvasManager {
     this.ctx.beginPath();
     this.ctx.setLineDash([5, 5]);
     this.ctx.moveTo(this.margin, this.margin);
-    this.ctx.lineTo(this.margin + this.refSize, this.margin);
-    this.ctx.lineTo(this.margin + this.refSize, this.margin + this.refSize);
-    this.ctx.lineTo(this.margin, this.margin + this.refSize);
+    this.ctx.lineTo(this.margin + this.innerSize, this.margin);
+    this.ctx.lineTo(this.margin + this.innerSize, this.margin + this.innerSize);
+    this.ctx.lineTo(this.margin, this.margin + this.innerSize);
     this.ctx.lineTo(this.margin, this.margin);
     this.ctx.stroke();
   }
@@ -72,11 +71,11 @@ class CanvasManager {
   }
 
   drawPlayer(player) {
-    const accSize = (0.05 * this.refSize) / maxDd;
+    const accSize = (0.05 * this.innerSize) / maxDd;
 
-    const playerSize = this.refSize * player.size;
-    const x = player.x * this.refSize;
-    const y = (1 - player.y) * this.refSize;
+    const playerSize = this.innerSize * player.size;
+    const x = player.x * this.innerSize;
+    const y = (1 - player.y) * this.innerSize;
 
     // draw score
     if (player.is_me) {
@@ -137,6 +136,12 @@ class CanvasManager {
     this.ctx.fillStyle = "white";
     let scoreStr = player.score.toFixed();
     this.ctx.fillText(scoreStr, this.margin + x, this.margin + y + playerSize);
+    this.ctx.textBaseline = "bottom";
+    this.ctx.fillText(
+      player.name,
+      this.margin + x,
+      this.margin + y - playerSize
+    );
   }
 
   drawInputRef(x, y) {
@@ -146,7 +151,7 @@ class CanvasManager {
 
     this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
     this.ctx.beginPath();
-    this.ctx.arc(x, y, 0.02 * this.refSize, 0, 2 * Math.PI);
+    this.ctx.arc(x, y, 0.02 * this.innerSize, 0, 2 * Math.PI);
     this.ctx.fill();
   }
 
@@ -157,8 +162,8 @@ class CanvasManager {
     this.ctx.fillStyle = "red";
     this.ctx.fillText(
       "GAME OVER",
-      this.margin + this.refSize / 2,
-      this.margin + this.refSize / 2 - 5
+      this.margin + this.innerSize / 2,
+      this.margin + this.innerSize / 2 - 5
     );
 
     this.ctx.font = this.smallFont;
@@ -167,8 +172,30 @@ class CanvasManager {
     this.ctx.fillStyle = "white";
     this.ctx.fillText(
       "tap to retry",
-      this.margin + this.refSize / 2,
-      this.margin + this.refSize / 2 + 5
+      this.margin + this.innerSize / 2,
+      this.margin + this.innerSize / 2 + 5
+    );
+  }
+
+  drawWelcome() {
+    this.ctx.font = this.bigFont;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "bottom";
+    this.ctx.fillStyle = "red";
+    this.ctx.fillText(
+      "SPACE DODGEMS",
+      this.margin + this.innerSize / 2,
+      this.margin + this.innerSize / 2 - 5
+    );
+
+    this.ctx.font = this.smallFont;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "top";
+    this.ctx.fillStyle = "white";
+    this.ctx.fillText(
+      "pick a name and tap to start",
+      this.margin + this.innerSize / 2,
+      this.margin + this.innerSize / 2 + 5
     );
   }
 
@@ -181,8 +208,8 @@ class CanvasManager {
 
     this.ctx.fillText(
       text.toUpperCase(),
-      this.margin + this.refSize / 2,
-      this.margin + this.refSize / 2 - 20
+      this.margin + this.innerSize / 2,
+      this.margin + this.innerSize / 2 - 20
     );
   }
 
@@ -192,12 +219,13 @@ class CanvasManager {
 }
 
 class GameEngine {
-  constructor(url, canvasId) {
-    this.playerId = this.getPlayerId();
+  constructor(url, canvasManager, playerId, playerName) {
+    this.playerId = playerId;
+    this.playerName = playerName;
     this.inputRefX = null;
     this.inputRefY = null;
     this.gameIsOver = false;
-    this.canvas = new CanvasManager(canvasId);
+    this.canvas = canvasManager;
 
     this.sock = new WebSocket(url);
 
@@ -221,26 +249,6 @@ class GameEngine {
     }.bind(this);
   }
 
-  getPlayerId() {
-    if (window.localStorage.playerId === undefined) {
-      function uuidv4() {
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-          /[xy]/g,
-          function (c) {
-            var r = (Math.random() * 16) | 0,
-              v = c == "x" ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-          }
-        );
-      }
-
-      const id = uuidv4();
-      console.log("new player ID: ", id);
-      window.localStorage.playerId = id;
-    }
-    return window.localStorage.playerId;
-  }
-
   clearInputRef() {
     this.inputRefX = null;
     this.inputRefY = null;
@@ -253,7 +261,9 @@ class GameEngine {
 
   onOpen() {
     console.log("Starting communication");
-    this.send({ command: { register: this.playerId } });
+    this.send({
+      command: { register: { id: this.playerId, name: this.playerName } },
+    });
   }
 
   onClose(event) {
@@ -322,20 +332,63 @@ class GameEngine {
 
 class GameManager {
   constructor() {
+    this.fullSize = Math.min(window.innerWidth, window.innerHeight);
+    const horizontal = window.innerWidth > this.fullSize;
+
     this.currentGame = null;
+
     const canvas = document.getElementById("canvas");
-    this.input = new Input(
-      canvas,
-      Math.min(window.innerWidth, window.innerHeight),
-      this.onInput.bind(this)
-    );
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const spacer = document.getElementById("spacer-canvas");
+    spacer.style.minWidth = this.fullSize + "px";
+    spacer.style.minHeight = this.fullSize + "px";
+
+    let container = document.getElementById("container");
+    container.style.flexDirection = horizontal ? "row" : "column";
+
+    this.input = new Input(document, this.fullSize, this.onInput.bind(this));
+    this.canvas = new CanvasManager(canvas);
+    this.fillPlayerName();
+    this.canvas.drawWelcome();
   }
 
   newGame() {
-    if (this.currentGame) {
-      this.currentGame.gameOver();
+    const playerName = this.getPlayerName();
+    this.currentGame = new GameEngine(
+      this.getWsHref(),
+      this.canvas,
+      this.getPlayerId(),
+      playerName
+    );
+    this.savePlayerName(playerName);
+  }
+
+  inputIsAValidation(input) {
+    if (!input.startInput) {
+      return false;
+    }
+    return input.x < this.fullSize && input.y < this.fullSize;
+  }
+
+  onInput(input) {
+    const OPEN = 1;
+    const CLOSED = 3;
+
+    if (
+      (!this.currentGame || this.currentGame.sock.readyState == CLOSED) &&
+      this.inputIsAValidation(input)
+    ) {
+      this.newGame();
+      return;
     }
 
+    if (this.currentGame && this.currentGame.sock.readyState == OPEN) {
+      this.currentGame.onInput(input);
+    }
+  }
+
+  getWsHref() {
     let location = window.location.pathname.toString();
     if (location[location.length - 1] == "/") {
       location = location.substring(0, -1);
@@ -345,24 +398,47 @@ class GameManager {
       wsHref += "/";
     }
     wsHref += "ws";
-
-    this.currentGame = new GameEngine(wsHref, "canvas");
+    return wsHref;
   }
 
-  onInput(input) {
-    const CLOSED = 3;
-    const OPEN = 1;
-    if (!this.currentGame) {
-      return;
-    }
+  getPlayerId() {
+    if (window.localStorage.playerId === undefined) {
+      function uuidv4() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
 
-    if (this.currentGame.sock.readyState == CLOSED && input.startInput) {
-      this.newGame();
-      return;
+      const id = uuidv4();
+      console.log("new player ID: ", id);
+      window.localStorage.playerId = id;
     }
+    return window.localStorage.playerId;
+  }
 
-    if (this.currentGame.sock.readyState == OPEN) {
-      this.currentGame.onInput(input);
+  nameIsValid(playerName) {
+    return playerName.length > 0;
+  }
+
+  getPlayerName() {
+    return document.getElementById("input-name").value;
+  }
+
+  savePlayerName(playerName) {
+    console.log("Saving player name:", playerName);
+    window.localStorage.playerName = playerName;
+  }
+
+  fillPlayerName() {
+    if (window.localStorage.playerName) {
+      console.log("Loading player name:", window.localStorage.playerName);
+      document.getElementById("input-name").value =
+        window.localStorage.playerName;
     }
   }
 }
@@ -370,7 +446,6 @@ class GameManager {
 function startGame() {
   console.log("Running ...");
   manager = new GameManager();
-  manager.newGame();
 }
 
 window.onload = startGame;

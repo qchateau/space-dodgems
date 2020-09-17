@@ -5,8 +5,9 @@
 
 namespace sd {
 
-player_t::player_t(world_t& world, id_t id, bool fake)
+player_t::player_t(world_t& world, id_t id, std::string_view name, bool fake)
     : id_{id},
+      name_{name},
       fake_{fake},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},
