@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 
 #include "listener.h"
+#include "scoreboard.h"
 #include "world.h"
 
 using namespace sd;
@@ -38,9 +39,10 @@ int main(int argc, char* argv[])
     // The io_context is required for all I/O
     net::io_context ioc{1};
 
+    auto scoreboard = std::make_shared<scoreboard_t>();
     std::vector<std::shared_ptr<world_t>> worlds;
     for (int i = 0; i < nworlds; ++i) {
-        worlds.emplace_back(std::make_shared<world_t>(ioc));
+        worlds.emplace_back(std::make_shared<world_t>(ioc, scoreboard));
         worlds.back()->run();
     }
     std::make_shared<listener_t>(ioc, std::move(worlds), tcp::endpoint{address, port})

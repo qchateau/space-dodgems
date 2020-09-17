@@ -1,7 +1,8 @@
 build/
 .history/
-.vs-code/
+.vscode/
 .clangd/
+
 
 .env
 compile_commands.json

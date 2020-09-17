@@ -226,6 +226,8 @@ class GameEngine {
     this.inputRefY = null;
     this.gameIsOver = false;
     this.canvas = canvasManager;
+    this.scoreboardSize = 5;
+    this.createScoreboard();
 
     this.sock = new WebSocket(url);
 
@@ -286,6 +288,7 @@ class GameEngine {
       return;
     }
 
+    this.updateScoreboard(msg.scoreboard);
     this.canvas.clear();
     this.canvas.drawTicksPerSecond();
     this.canvas.drawLimits();
@@ -327,6 +330,45 @@ class GameEngine {
   restartGame() {
     this.gameIsOver = false;
     this.send({ command: { respawn: true } });
+  }
+
+  createScoreboard() {
+    let parent = document.getElementById("scoreboard-body");
+    parent.innerHTML = "";
+
+    for (let idx = 0; idx < this.scoreboardSize; ++idx) {
+      let row = document.createElement("div");
+      row.classList.add("scoreboard-line");
+
+      let name = document.createElement("div");
+      name.classList.add("scoreboard-name");
+      name.id = "scoreboard-player-name-" + idx;
+      row.appendChild(name);
+
+      let score = document.createElement("div");
+      score.classList.add("scoreboard-score");
+      score.id = "scoreboard-player-score-" + idx;
+      row.appendChild(score);
+
+      parent.appendChild(row);
+    }
+  }
+
+  updateScoreboard(scoreboard) {
+    function update(elementId, value) {
+      let element = document.getElementById(elementId);
+      if (element.innerText != value) {
+        element.innerText = value;
+      }
+    }
+    for (
+      let idx = 0;
+      idx < Math.min(this.scoreboardSize, scoreboard.length);
+      ++idx
+    ) {
+      update("scoreboard-player-name-" + idx, scoreboard[idx].name);
+      update("scoreboard-player-score-" + idx, scoreboard[idx].score.toFixed());
+    }
   }
 }
 

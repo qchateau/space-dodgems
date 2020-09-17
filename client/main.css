@@ -6,6 +6,9 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-size: 100% 100%;
+  font-size: 175%;
+  font-family: "Roboto Mono";
+  color: white;
 }
 
 /* hide the element used to preload the fonts */
@@ -17,20 +20,15 @@ body {
   position: absolute;
 }
 
-#container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-}
-
 #canvas {
   position: absolute;
   z-index: -1;
 }
 
-#inner-canvas {
-  width: 100px;
-  height: 100%;
+#container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
 
 #details {
@@ -38,25 +36,59 @@ body {
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
-  color: white;
-  font-size: 125%;
-  font-family: "Roboto Mono";
+}
+
+#name-flex-container {
+  display: flex;
+  justify-content: center;
+}
+
+#input-name-label {
+  padding-right: 20px;
+  font-size: 100%;
 }
 
 #input-name {
   width: 100%;
   max-width: 400px;
-  color: white;
-  font-size: 100%;
-  font-family: "Roboto Mono";
-  background-color: black;
-  border: 2px solid rgb(255, 255, 255);
+  padding: 2px;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid rgb(255, 255, 255);
   border-radius: 2px;
+  color: white;
+  font-size: 90%;
 }
 
 #scoreboard {
-  margin-top: 20px;
-  background-color: rgb(50, 50, 50);
+  width: 100%;
+  max-width: 500px;
+  min-height: 100px;
+  margin: 20px auto 0px auto;
+  box-sizing: border-box;
+  border-radius: 2px;
+  font-size: smaller;
+}
+
+.scoreboard-title {
+  font-weight: bold;
+  padding-left: 20px;
+}
+
+.scoreboard-line {
+  overflow: hidden;
+  display: flex;
+}
+
+.scoreboard-name {
+  width: 75%;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.scoreboard-score {
+  width: 25%;
+  text-align: right;
 }
 
 .unselectable {

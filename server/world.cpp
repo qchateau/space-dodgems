@@ -1,5 +1,6 @@
 #include "world.h"
 #include "player.h"
+#include "scoreboard.h"
 
 #include <array>
 
@@ -38,7 +39,10 @@ std::string get_fake_player_name(
 
 }
 
-world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
+world_t::world_t(net::io_context& ioc, std::shared_ptr<scoreboard_t> scoreboard)
+    : ioc_{ioc}, scoreboard_{scoreboard}
+{
+}
 
 world_t::~world_t() = default;
 
@@ -149,7 +153,10 @@ void world_t::run()
 
 nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
 {
-    nlohmann::json state = {{"players", nlohmann::json::array()}};
+    nlohmann::json state = {
+        {"players", nlohmann::json::array()},
+        {"scoreboard", nlohmann::json::array()},
+    };
 
     bool game_over = false;
     transform(
@@ -166,7 +173,6 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
                     p->lifetime())
                     .count();
             return nlohmann::json({
-                {"id", p->id()},
                 {"name", p->name()},
                 {"x", p->state().x},
                 {"y", p->state().y},
@@ -184,6 +190,18 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
         });
 
     state["game_over"] = game_over;
+
+    transform(
+        begin(scoreboard_->scores()),
+        end(scoreboard_->scores()),
+        back_inserter(state["scoreboard"]),
+        [&](const score_t& score) {
+            return nlohmann::json({
+                {"name", score.name},
+                {"score", score.score},
+            });
+        });
+
     return state;
 }
 
@@ -221,10 +239,12 @@ void world_t::update(std::chrono::nanoseconds dt)
             continue;
         }
 
+        // kill players that are outside the world
         if (!player.is_in_world()) {
             player.kill();
         }
 
+        // compute collisions
         for (auto other_it = ++decltype(player_it)(player_it);
              other_it != end(players_);
              ++other_it) {
@@ -241,6 +261,11 @@ void world_t::update(std::chrono::nanoseconds dt)
                 other.add_score(player.score());
                 player.kill();
             }
+        }
+
+        // update scoreboard
+        if (!player.fake()) {
+            scoreboard_->push_score(player);
         }
     }
 

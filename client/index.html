@@ -22,16 +22,26 @@
 
   <body style="margin: 0px">
     <span style="font-family: 'Roboto Mono'" id="preloadfont">.</span>
+
     <canvas id="canvas"> </canvas>
+
     <div id="container" class="unselectable">
       <span id="spacer-canvas"></span>
+
       <div id="details">
-        <div id="name-container">
-          <div>Name:</div>
-          <input type="text" id="input-name" />
+        <div>
+          <div id="name-flex-container">
+            <div id="input-name-label">Name</div>
+            <input type="text" id="input-name" />
+          </div>
         </div>
 
-        <div id="scoreboard"></div>
+        <div id="scoreboard">
+          <div class="scoreboard-line">
+            <span class="scoreboard-title">SCOREBOARD</span>
+          </div>
+          <div id="scoreboard-body"></div>
+        </div>
       </div>
     </div>
   </body>

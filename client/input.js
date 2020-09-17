@@ -30,7 +30,9 @@ class Input {
     this.onInput = onInput;
     this.maxDragLength = maxDragLength;
 
-    element.addEventListener("touchstart", this.onTouchStart.bind(this));
+    element.addEventListener("touchstart", this.onTouchStart.bind(this), {
+      passive: false,
+    });
     element.addEventListener("touchend", this.onTouchEnd.bind(this));
     element.addEventListener(
       "touchmove",

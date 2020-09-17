@@ -26,6 +26,7 @@ class session_t;
 class listener_t;
 class world_t;
 class player_t;
+class scoreboard_t;
 
 using player_id_t = boost::uuids::uuid;
 using player_handle_t = std::unique_ptr<player_t, std::function<void(player_t*)>>;
