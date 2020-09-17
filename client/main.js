@@ -340,10 +340,13 @@ class GameManager {
     if (location[location.length - 1] == "/") {
       location = location.substring(0, -1);
     }
-    this.currentGame = new GameEngine(
-      "ws://" + window.location.host + location + "/ws",
-      "canvas"
-    );
+    let wsHref = window.location.href.toString().replace(RegExp("^http"), "ws");
+    if (wsHref[wsHref.length - 1] != "/") {
+      wsHref += "/";
+    }
+    wsHref += "ws";
+
+    this.currentGame = new GameEngine(wsHref, "canvas");
   }
 
   onInput(input) {
