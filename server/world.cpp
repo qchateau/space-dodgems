@@ -248,10 +248,13 @@ void world_t::update(std::chrono::nanoseconds dt)
 
 void world_t::update_fake_player_dd(player_t& p)
 {
+    constexpr double emergency_dist = 0.15;
     const auto l1_dist_to = [&p](double x, double y) {
         return std::abs(p.state().x - x) + std::abs(p.state().y - y);
     };
 
+    // initial closest target is the center of the map
+    // this way fake players will more likely stay close to the middle
     double closest_x = 0.5;
     double closest_y = 0.5;
     double closest_distance = l1_dist_to(closest_x, closest_y);
@@ -271,8 +274,23 @@ void world_t::update_fake_player_dd(player_t& p)
     }
 
     constexpr double fake_player_speed_factor = 2;
-    const auto dx = closest_x - p.state().x;
-    const auto dy = closest_y - p.state().y;
+    auto dx = closest_x - p.state().x;
+    auto dy = closest_y - p.state().y;
+
+    // override targets for players close to the edge
+    if (p.state().x < emergency_dist) {
+        dx = 1;
+    }
+    else if (p.state().x > 1 - emergency_dist) {
+        dx = -1;
+    }
+    if (p.state().y < emergency_dist) {
+        dy = 1;
+    }
+    else if (p.state().y > 1 - emergency_dist) {
+        dy = -1;
+    }
+
     p.set_dd(
         fake_player_speed_factor * dx * player_t::max_dd,
         fake_player_speed_factor * dy * player_t::max_dd);
