@@ -25,7 +25,7 @@ public:
     static constexpr auto refresh_dt = std::chrono::milliseconds{20};
     static constexpr std::size_t max_players = 8;
 
-    world_t(net::io_context& ioc, std::shared_ptr<scoreboard_t> scorboard);
+    world_t(net::io_context& ioc);
     ~world_t();
     void run();
 
@@ -52,7 +52,6 @@ private:
     std::vector<std::unique_ptr<player_t>> players_;
     std::list<player_handle_t> fake_players_;
     boost::uuids::random_generator uuid_generator_;
-    std::shared_ptr<scoreboard_t> scoreboard_;
 };
 
 } // sd

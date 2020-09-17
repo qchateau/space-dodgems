@@ -35,8 +35,8 @@ public:
 
     void set_pos(double x, double y);
     void set_dd(double ddx, double ddy);
-    void add_score(double v) { score_ += v; }
     void respawn();
+    void add_score(double v);
     void update_pos(std::chrono::nanoseconds dt);
 
     const auto& state() const { return state_; };
@@ -44,8 +44,8 @@ public:
     std::string name() const { return name_; }
     bool alive() const { return alive_; }
     bool fake() const { return fake_; }
-    std::chrono::nanoseconds lifetime() const;
     double score() const { return score_; }
+    double best_score() const { return best_score_; }
     double speed() const;
     double distance_to(const player_t& other) const;
 
@@ -59,8 +59,8 @@ private:
     std::mt19937 rnd_gen_{std::random_device{}()};
     const id_t id_;
     const std::string name_;
-    clock_t::time_point birth_time_;
     double score_;
+    double best_score_;
     bool fake_;
     state_t state_;
     double acc_;

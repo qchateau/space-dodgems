@@ -1,6 +1,5 @@
 #include "world.h"
 #include "player.h"
-#include "scoreboard.h"
 
 #include <array>
 
@@ -39,10 +38,7 @@ std::string get_fake_player_name(
 
 }
 
-world_t::world_t(net::io_context& ioc, std::shared_ptr<scoreboard_t> scoreboard)
-    : ioc_{ioc}, scoreboard_{scoreboard}
-{
-}
+world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
 
 world_t::~world_t() = default;
 
@@ -154,53 +150,31 @@ void world_t::run()
 nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
 {
     nlohmann::json state = {
-        {"players", nlohmann::json::array()},
-        {"scoreboard", nlohmann::json::array()},
-    };
+        {"players", nlohmann::json::array()}, {"game_over", false}};
 
-    bool game_over = false;
-    transform(
-        begin(players_),
-        end(players_),
-        back_inserter(state["players"]),
-        [&](const auto& p) {
-            bool is_me = *p == *player;
-            if (is_me && !p->alive()) {
-                game_over = true;
-            }
-            auto lifetime =
-                std::chrono::duration_cast<std::chrono::duration<double>>(
-                    p->lifetime())
-                    .count();
-            return nlohmann::json({
-                {"name", p->name()},
-                {"x", p->state().x},
-                {"y", p->state().y},
-                {"dx", p->state().dx},
-                {"dy", p->state().dy},
-                {"ddx", p->state().ddx},
-                {"ddy", p->state().ddy},
-                {"size", p->state().size},
-                {"lifetime", lifetime},
-                {"score", p->score()},
-                {"is_me", is_me},
-                {"alive", p->alive()},
-                {"fake", p->fake()},
-            });
-        });
+    for (const auto& p_ptr : players_) {
+        const auto& p = *p_ptr;
+        const bool is_me = p == *player;
+        if (is_me && !p.alive()) {
+            state["game_over"] = true;
+        }
 
-    state["game_over"] = game_over;
-
-    transform(
-        begin(scoreboard_->scores()),
-        end(scoreboard_->scores()),
-        back_inserter(state["scoreboard"]),
-        [&](const score_t& score) {
-            return nlohmann::json({
-                {"name", score.name},
-                {"score", score.score},
-            });
-        });
+        state["players"].push_back(nlohmann::json({
+            {"name", p.name()},
+            {"x", p.state().x},
+            {"y", p.state().y},
+            {"dx", p.state().dx},
+            {"dy", p.state().dy},
+            {"ddx", p.state().ddx},
+            {"ddy", p.state().ddy},
+            {"size", p.state().size},
+            {"score", p.score()},
+            {"best_score", p.best_score()},
+            {"is_me", is_me},
+            {"alive", p.alive()},
+            {"fake", p.fake()},
+        }));
+    }
 
     return state;
 }
@@ -262,23 +236,14 @@ void world_t::update(std::chrono::nanoseconds dt)
                 player.kill();
             }
         }
-
-        // update scoreboard
-        if (!player.fake()) {
-            scoreboard_->push_score(player);
-        }
     }
 
-    // remove killed fake players
-    for (auto it = begin(fake_players_); it != end(fake_players_);) {
-        if (!(*it)->alive()) {
-            it = fake_players_.erase(it);
-        }
-        else {
-            ++it;
+    // respawn killed fake players
+    for (const auto& fake_player : fake_players_) {
+        if (!fake_player->alive()) {
+            fake_player->respawn();
         }
     }
-    adjust_players();
 }
 
 void world_t::update_fake_player_dd(player_t& p)

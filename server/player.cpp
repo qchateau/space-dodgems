@@ -8,6 +8,7 @@ namespace sd {
 player_t::player_t(world_t& world, id_t id, std::string_view name, bool fake)
     : id_{id},
       name_{name},
+      best_score_{0},
       fake_{fake},
       state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
       acc_{0.02},
@@ -42,6 +43,7 @@ void player_t::set_dd(double ddx, double ddy)
     state_.ddx = ddx;
     state_.ddy = ddy;
 }
+
 void player_t::respawn()
 {
     std::uniform_real_distribution<> rnd(0.1, 0.9);
@@ -51,7 +53,12 @@ void player_t::respawn()
     state_.y = rnd(rnd_gen_);
     alive_ = true;
     score_ = 0;
-    birth_time_ = clock_t::now();
+}
+
+void player_t::add_score(double v)
+{
+    score_ += v;
+    best_score_ = std::max(best_score_, score_);
 }
 
 void player_t::update_pos(std::chrono::nanoseconds dt)
@@ -64,12 +71,7 @@ void player_t::update_pos(std::chrono::nanoseconds dt)
     const auto yinc = state_.dy * seconds;
     state_.x += xinc;
     state_.y += yinc;
-    score_ += (std::abs(xinc) + std::abs(yinc)) * 1000;
-}
-
-std::chrono::nanoseconds player_t::lifetime() const
-{
-    return clock_t::now() - birth_time_;
+    add_score((std::abs(xinc) + std::abs(yinc)) * 1000);
 }
 
 double player_t::speed() const

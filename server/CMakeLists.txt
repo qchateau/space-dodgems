@@ -39,7 +39,6 @@ if (NOT CONAN_ONLY)
         session.cpp
         player.cpp
         world.cpp
-        scoreboard.cpp
     )
     target_link_libraries(
         server
