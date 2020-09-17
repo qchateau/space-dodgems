@@ -26,6 +26,8 @@ conan_cmake_run(
         spdlog/1.8.0
         boost/1.74.0
         nlohmann_json/3.9.1
+    OPTIONS
+        boost:header_only=True
     INSTALL_ARGS
         --build missing
 )
