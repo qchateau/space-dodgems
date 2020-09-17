@@ -28,7 +28,7 @@ Here is a sample of the location blocks you can add
 to an nginx server to use space-dodgems behind nginx
 acting as a reverse-proxy.
 
-Note that it works both both HTTP and HTTPS.
+Note that it works for both HTTP and HTTPS.
 
 ```
 server {
