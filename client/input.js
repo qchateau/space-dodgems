@@ -29,6 +29,7 @@ class Input {
     this.mouseDown = false;
     this.onInput = onInput;
     this.maxDragLength = maxDragLength;
+    this.preventDefaultTouchStart = false;
 
     element.addEventListener("touchstart", this.onTouchStart.bind(this), {
       passive: false,
@@ -48,7 +49,13 @@ class Input {
   }
 
   onTouchStart(e) {
-    e.preventDefault(); // very important, otherwise chrome throttles inputs
+    if (this.preventDefaultTouchStart) {
+      // preventing the touchstart will prevent
+      // chrome from throttling touchmove on mobile
+      // but will also prevent the "input" field
+      // from working
+      e.preventDefault();
+    }
     this.touchStartX = e.changedTouches[0].clientX;
     this.touchStartY = e.changedTouches[0].clientY;
     this.onInput({

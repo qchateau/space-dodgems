@@ -404,6 +404,7 @@ class GameManager {
   }
 
   newGame() {
+    this.input.preventDefaultTouchStart = true;
     const playerName = this.getPlayerName();
     this.currentGame = new GameEngine(
       this.getWsHref(),
