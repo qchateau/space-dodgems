@@ -22,7 +22,7 @@ Sources are mounted and the backend is built on every backend restart.
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d
 ```
 
-## Use behing a reverse-proxy
+## Use behind a reverse-proxy
 
 Here is a sample of the location blocks you can add
 to an nginx server to use space-dodgems behind nginx
