@@ -429,18 +429,19 @@ class GameManager {
   }
 
   onInput(input) {
-    const OPEN = 1;
-    const CLOSED = 3;
-
     if (
-      (!this.currentGame || this.currentGame.sock.readyState == CLOSED) &&
+      (!this.currentGame ||
+        this.currentGame.sock.readyState == WebSocket.CLOSED) &&
       this.inputIsAValidation(input)
     ) {
       this.newGame();
       return;
     }
 
-    if (this.currentGame && this.currentGame.sock.readyState == OPEN) {
+    if (
+      this.currentGame &&
+      this.currentGame.sock.readyState == WebSocket.OPEN
+    ) {
       this.currentGame.onInput(input);
     }
   }
