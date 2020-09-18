@@ -1,4 +1,44 @@
 const font = "Roboto Mono";
+const scoreboardSize = 8;
+
+function createScoreboard() {
+  let parent = document.getElementById("scoreboard-body");
+  parent.innerHTML = "";
+
+  for (let idx = 0; idx < scoreboardSize; ++idx) {
+    let row = document.createElement("div");
+    row.classList.add("scoreboard-line");
+
+    let place = document.createElement("div");
+    place.classList.add("scoreboard-place");
+    place.innerText = idx + 1 + ". ";
+    row.appendChild(place);
+
+    let name = document.createElement("div");
+    name.classList.add("scoreboard-name");
+    name.id = "scoreboard-player-name-" + idx;
+    row.appendChild(name);
+
+    let score = document.createElement("div");
+    score.classList.add("scoreboard-score");
+    score.id = "scoreboard-player-score-" + idx;
+    row.appendChild(score);
+
+    parent.appendChild(row);
+  }
+}
+
+function updateScoreboard(idx, name, score) {
+  function update(elementId, value) {
+    let element = document.getElementById(elementId);
+    if (element.innerText != value) {
+      element.innerText = value;
+    }
+  }
+
+  update("scoreboard-player-name-" + idx, name);
+  update("scoreboard-player-score-" + idx, score.toFixed());
+}
 
 class CanvasManager {
   constructor(htmlCanvas) {
@@ -226,8 +266,6 @@ class GameEngine {
     this.inputRefY = null;
     this.gameIsOver = false;
     this.canvas = canvasManager;
-    this.scoreboardSize = 8;
-    this.createScoreboard();
 
     this.sock = new WebSocket(url);
 
@@ -332,28 +370,6 @@ class GameEngine {
     this.send({ command: { respawn: true } });
   }
 
-  createScoreboard() {
-    let parent = document.getElementById("scoreboard-body");
-    parent.innerHTML = "";
-
-    for (let idx = 0; idx < this.scoreboardSize; ++idx) {
-      let row = document.createElement("div");
-      row.classList.add("scoreboard-line");
-
-      let name = document.createElement("div");
-      name.classList.add("scoreboard-name");
-      name.id = "scoreboard-player-name-" + idx;
-      row.appendChild(name);
-
-      let score = document.createElement("div");
-      score.classList.add("scoreboard-score");
-      score.id = "scoreboard-player-score-" + idx;
-      row.appendChild(score);
-
-      parent.appendChild(row);
-    }
-  }
-
   updateScoreboard(players) {
     let scoreboard = players.map((x) => ({
       name: x.name,
@@ -361,21 +377,9 @@ class GameEngine {
     }));
     scoreboard.sort((a, b) => b.score - a.score);
 
-    function update(elementId, value) {
-      let element = document.getElementById(elementId);
-      if (element.innerText != value) {
-        element.innerText = value;
-      }
-    }
-
-    const effectiveSize = Math.min(this.scoreboardSize, scoreboard.length);
+    const effectiveSize = Math.min(scoreboardSize, scoreboard.length);
     for (let idx = 0; idx < effectiveSize; ++idx) {
-      update("scoreboard-player-name-" + idx, scoreboard[idx].name);
-      update("scoreboard-player-score-" + idx, scoreboard[idx].score.toFixed());
-    }
-    for (let idx = effectiveSize; idx < this.scoreboardSize; ++idx) {
-      update("scoreboard-player-name-" + idx, "");
-      update("scoreboard-player-score-" + idx, "");
+      updateScoreboard(idx, scoreboard[idx].name, scoreboard[idx].score);
     }
   }
 }
@@ -396,6 +400,8 @@ class GameManager {
 
     let container = document.getElementById("container");
     container.style.flexDirection = horizontal ? "row" : "column";
+
+    createScoreboard();
 
     this.input = new Input(document, this.fullSize, this.onInput.bind(this));
     this.canvas = new CanvasManager(canvas);
