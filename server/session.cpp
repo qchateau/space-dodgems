@@ -7,7 +7,8 @@
 namespace sd {
 
 namespace {
-constexpr auto keepalive_period = std::chrono::seconds{10};
+
+constexpr auto keepalive_period = std::chrono::seconds{60};
 
 bool player_name_is_valid(std::string_view name)
 {
@@ -60,22 +61,29 @@ net::awaitable<void> session_t::do_run()
 
     if (!player_id.is_string() || !player_name.is_string()) {
         spdlog::warn("client failed to register");
-        ws_.close(beast::websocket::close_reason{"registration error"});
+        co_await ws_.async_close(
+            beast::websocket::close_reason{"registration error"},
+            net::use_awaitable);
         co_return;
     }
 
     if (!player_name_is_valid(player_name.get<std::string>())) {
-        ws_.close(beast::websocket::close_reason{"invalid name"});
+        co_await ws_.async_close(
+            beast::websocket::close_reason{"invalid name"}, net::use_awaitable);
         co_return;
     }
 
+    std::optional<beast::websocket::close_reason> close_reason;
     try {
         player_ = world_->register_player(
             boost::uuids::string_generator{}(player_id.get<std::string>()),
             player_name.get<std::string>());
     }
     catch (const player_already_registered& exc) {
-        ws_.close(beast::websocket::close_reason{exc.what()});
+        close_reason.emplace(exc.what());
+    }
+    if (close_reason) {
+        co_await ws_.async_close(*close_reason, net::use_awaitable);
         co_return;
     }
 
@@ -148,6 +156,7 @@ net::awaitable<void> session_t::write_loop()
 net::awaitable<void> session_t::keepalive()
 {
     while (ws_.is_open()) {
+        std::optional<beast::websocket::close_reason> reason;
         try {
             timer_.expires_from_now(keepalive_period);
             co_await timer_.async_wait(net::use_awaitable);
@@ -155,18 +164,23 @@ net::awaitable<void> session_t::keepalive()
                 // still alive despite no command, let this one open
                 continue;
             }
-            ws_.close(beast::websocket::close_reason{"idle for too long"});
+            reason.emplace("idle for too long");
         }
         catch (const boost::system::system_error& exc) {
             if (exc.code() == net::error::operation_aborted) {
                 continue;
             }
             spdlog::error("unexpected exception: {}", exc.what());
-            ws_.close(beast::websocket::close_reason{exc.what()});
+            reason.emplace(exc.what());
         }
         catch (const std::exception& exc) {
             spdlog::error("unexpected exception: {}", exc.what());
-            ws_.close(beast::websocket::close_reason{exc.what()});
+            reason.emplace(exc.what());
+        }
+
+        if (reason) {
+            co_await ws_.async_close(*reason, net::use_awaitable);
+            break;
         }
     }
 }
