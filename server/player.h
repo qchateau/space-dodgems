@@ -41,7 +41,7 @@ public:
 
     const auto& state() const { return state_; };
     id_t id() const { return id_; }
-    std::string name() const { return name_; }
+    const std::string& name() const { return name_; }
     bool alive() const { return alive_; }
     bool fake() const { return fake_; }
     double score() const { return score_; }

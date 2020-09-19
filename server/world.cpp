@@ -9,6 +9,16 @@ namespace sd {
 
 namespace {
 
+constexpr auto check_idle_dt = std::chrono::seconds{1};
+
+// an IDLE player keeps a reserved spot in the world
+// this means he can reconnect to play with the same
+// players and will keep his score
+// In the meantime, a bot takes his place
+constexpr auto idle_duration = std::chrono::minutes{5};
+
+constexpr std::size_t max_players = 8;
+
 std::string get_fake_player_name(
     const std::vector<std::unique_ptr<player_t>>& current_players)
 {
@@ -44,13 +54,12 @@ world_t::~world_t() = default;
 
 int world_t::real_players() const
 {
-    int real_players = 0;
-    for (const auto& p : players_) {
-        if (!p->fake()) {
-            ++real_players;
-        }
-    }
-    return real_players;
+    return active_real_players() + idle_players_.size();
+}
+
+int world_t::active_real_players() const
+{
+    return players_.size() - fake_players_.size();
 }
 
 int world_t::available_places() const
@@ -78,16 +87,29 @@ player_handle_t world_t::register_player(
         throw player_already_registered{};
     }
 
-    auto& new_player = players_.emplace_back(
-        std::make_unique<player_t>(*this, player_id, player_name, fake));
+    auto idle_it =
+        find_if(begin(idle_players_), end(idle_players_), [&](const auto& p) {
+            return p.player->id() == player_id;
+        });
+    if (idle_it != end(idle_players_)) {
+        players_.emplace_back(std::move(idle_it->player));
+        players_.back()->respawn();
+        idle_players_.erase(idle_it);
+        spdlog::info("restoring player {} ({})", player_name, to_string(player_id));
+    }
+    else {
+        players_.emplace_back(
+            std::make_unique<player_t>(*this, player_id, player_name, fake));
 
-    if (!fake) {
-        spdlog::info("registered player {}", to_string(new_player->id()));
+        if (!fake) {
+            spdlog::info(
+                "registering player {} ({})", player_name, to_string(player_id));
+        }
     }
 
     net::post(ioc_, [this]() { adjust_players(); });
     return {
-        new_player.get(),
+        players_.back().get(),
         [self = shared_from_this()](player_t* p) { self->unregister_player(*p); },
     };
 }
@@ -98,23 +120,26 @@ void world_t::unregister_player(const player_t& p)
         return p == *player;
     });
     if (it == end(players_)) {
-        spdlog::warn("unregistered unknown player {}", to_string(p.id()));
+        spdlog::warn(
+            "unregistering unknown player {} ({})", p.name(), to_string(p.id()));
         return;
     }
-    players_.erase(it);
 
     if (!p.fake()) {
-        spdlog::info("unregistered player {}", to_string(p.id()));
+        idle_players_.push_back({clock_t::now(), std::move(*it)});
+        spdlog::info("moving player {} to idle ({})", p.name(), to_string(p.id()));
     }
+
+    players_.erase(it);
 
     net::post(ioc_, [this]() { adjust_players(); });
 }
 
 void world_t::adjust_players()
 {
-    if (real_players() == 0) {
+    if (active_real_players() == 0) {
         if (!fake_players_.empty()) {
-            spdlog::info("no more players, removing all fake players");
+            spdlog::info("no more active players, removing all fake players");
             fake_players_.clear();
         }
         return;
@@ -142,7 +167,13 @@ void world_t::run()
     net::co_spawn(
         ioc_,
         [self = shared_from_this()]() -> net::awaitable<void> {
-            co_await self->on_run();
+            co_await self->update_loop();
+        },
+        net::detached);
+    net::co_spawn(
+        ioc_,
+        [self = shared_from_this()]() -> net::awaitable<void> {
+            co_await self->check_idle_players_loop();
         },
         net::detached);
 }
@@ -179,7 +210,7 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
     return state;
 }
 
-net::awaitable<void> world_t::on_run()
+net::awaitable<void> world_t::update_loop()
 {
     auto executor = co_await net::this_coro::executor;
     net::steady_timer timer{executor};
@@ -188,6 +219,19 @@ net::awaitable<void> world_t::on_run()
     while (true) {
         update(world_t::refresh_dt);
         timer.expires_at(timer.expires_at() + refresh_dt);
+        co_await timer.async_wait(net::use_awaitable);
+    }
+}
+
+net::awaitable<void> world_t::check_idle_players_loop()
+{
+    auto executor = co_await net::this_coro::executor;
+    net::steady_timer timer{executor};
+    timer.expires_from_now(std::chrono::seconds{0});
+
+    while (true) {
+        check_idle_players();
+        timer.expires_at(timer.expires_at() + check_idle_dt);
         co_await timer.async_wait(net::use_awaitable);
     }
 }
@@ -294,6 +338,23 @@ void world_t::update_fake_player_dd(player_t& p)
     p.set_dd(
         fake_player_speed_factor * dx * player_t::max_dd,
         fake_player_speed_factor * dy * player_t::max_dd);
+}
+
+void world_t::check_idle_players()
+{
+    const auto remove_from = clock_t::now() - idle_duration;
+    auto end_it = std::remove_if(
+        begin(idle_players_), end(idle_players_), [&](const auto& p) {
+            if (p.from < remove_from) {
+                spdlog::info(
+                    "unregistering player {} ({})",
+                    p.player->name(),
+                    to_string(p.player->id()));
+                return true;
+            }
+            return false;
+        });
+    idle_players_.erase(end_it, end(idle_players_));
 }
 
 } // sd

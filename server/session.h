@@ -14,7 +14,6 @@ namespace sd {
 class session_t : public std::enable_shared_from_this<session_t> {
 public:
     session_t(std::shared_ptr<world_t> world, tcp::socket&& socket);
-    ~session_t();
 
     session_t(const session_t&) = delete;
     session_t(session_t&&) = delete;
@@ -23,7 +22,6 @@ public:
     session_t& operator=(session_t&&) = delete;
 
     void run();
-    tcp::endpoint remote_endpoint() const { return remote_endpoint_; }
 
 private:
     net::awaitable<void> do_run();
@@ -38,7 +36,6 @@ private:
     std::shared_ptr<world_t> world_;
     player_handle_t player_;
     websocket::stream<beast::tcp_stream> ws_;
-    const tcp::endpoint remote_endpoint_;
     net::steady_timer timer_;
 };
 

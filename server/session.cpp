@@ -18,17 +18,8 @@ bool player_name_is_valid(std::string_view name)
 }
 
 session_t::session_t(std::shared_ptr<world_t> world, tcp::socket&& socket)
-    : world_{std::move(world)},
-      ws_{std::move(socket)},
-      remote_endpoint_{ws_.next_layer().socket().remote_endpoint()},
-      timer_{ws_.get_executor()}
+    : world_{std::move(world)}, ws_{std::move(socket)}, timer_{ws_.get_executor()}
 {
-    spdlog::info("new session from {}", remote_endpoint().address().to_string());
-}
-
-session_t::~session_t()
-{
-    spdlog::info("closing session from {}", remote_endpoint().address().to_string());
 }
 
 void session_t::run()
