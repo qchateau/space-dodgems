@@ -259,13 +259,14 @@ class CanvasManager {
 }
 
 class GameEngine {
-  constructor(url, canvasManager, playerId, playerName) {
+  constructor(url, canvasManager, input, playerId, playerName) {
     this.playerId = playerId;
     this.playerName = playerName;
     this.inputRefX = null;
     this.inputRefY = null;
     this.gameIsOver = false;
     this.canvas = canvasManager;
+    this.input = input;
 
     this.sock = new WebSocket(url);
 
@@ -301,6 +302,8 @@ class GameEngine {
 
   onOpen() {
     console.log("Starting communication");
+    window.scrollTo(0, 0);
+    this.input.preventDefaultTouchStart = true;
     this.send({
       command: { register: { id: this.playerId, name: this.playerName } },
     });
@@ -308,6 +311,7 @@ class GameEngine {
 
   onClose(event) {
     console.log("Closing communication");
+    this.input.preventDefaultTouchStart = false;
     if (event.reason) {
       this.canvas.drawError(event.reason);
     } else {
@@ -317,6 +321,7 @@ class GameEngine {
 
   onError(error) {
     console.error("WebSocket error", error);
+    this.input.preventDefaultTouchStart = false;
     this.canvas.drawError("CONNECTION ERROR");
   }
 
@@ -410,11 +415,11 @@ class GameManager {
   }
 
   newGame() {
-    this.input.preventDefaultTouchStart = true;
     const playerName = this.getPlayerName();
     this.currentGame = new GameEngine(
       this.getWsHref(),
       this.canvas,
+      this.input,
       this.getPlayerId(),
       playerName
     );
