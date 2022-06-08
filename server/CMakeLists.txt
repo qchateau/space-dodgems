@@ -22,8 +22,7 @@ conan_cmake_run(
     BASIC_SETUP
     CMAKE_TARGETS
     REQUIRES
-        fmt/7.0.1
-        spdlog/1.8.0
+        spdlog/1.10.0
         boost/1.74.0
         nlohmann_json/3.9.1
     OPTIONS

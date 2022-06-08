@@ -14,6 +14,7 @@ namespace sd {
 class session_t : public std::enable_shared_from_this<session_t> {
 public:
     session_t(std::shared_ptr<world_t> world, tcp::socket&& socket);
+    ~session_t() = default;
 
     session_t(const session_t&) = delete;
     session_t(session_t&&) = delete;

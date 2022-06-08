@@ -8,10 +8,10 @@
 
 namespace sd {
 
-namespace beast = boost::beast;
-namespace net = boost::asio;
-namespace http = beast::http;
-namespace websocket = beast::websocket;
+namespace beast = boost::beast; // NOLINT
+namespace net = boost::asio; // NOLINT
+namespace http = beast::http; // NOLINT
+namespace websocket = beast::websocket; // NOLINT
 using tcp = net::ip::tcp;
 
 template <typename T>

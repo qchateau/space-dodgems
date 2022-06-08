@@ -4,15 +4,20 @@
 #include <algorithm>
 
 namespace sd {
+namespace {
+constexpr auto score_multiplier = 1000;
+}
 
 player_t::player_t(world_t& world, id_t id, std::string_view name, bool fake)
     : id_{id},
       name_{name},
+      score_{0},
       best_score_{0},
       fake_{fake},
-      state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0},
-      acc_{0.02},
-      world_{world}
+      state_{.x = 0.5, .y = 0.5, .dx = 0, .dy = 0, .ddx = 0, .ddy = 0}, // NOLINT(*-magic-numbers)
+      acc_{0.02}, // NOLINT(*-magic-numbers)
+      world_{world},
+      alive_{false}
 {
     respawn();
 }
@@ -27,7 +32,7 @@ bool player_t::operator!=(const player_t& other) const
     return id_ != other.id_;
 }
 
-void player_t::set_pos(double x, double y)
+void player_t::set_pos(double x, double y) // NOLINT(bugprone-*)
 {
     state_.x = x;
     state_.y = y;
@@ -46,7 +51,9 @@ void player_t::set_dd(double ddx, double ddy)
 
 void player_t::respawn()
 {
-    std::uniform_real_distribution<> rnd(0.1, 0.9);
+    constexpr auto low_bound = 0.1;
+    constexpr auto high_bound = 0.9;
+    std::uniform_real_distribution<> rnd(low_bound, high_bound);
 
     state_.dx = state_.dy = state_.ddx = state_.ddy = 0;
     state_.x = rnd(rnd_gen_);
@@ -71,7 +78,7 @@ void player_t::update_pos(std::chrono::nanoseconds dt)
     const auto yinc = state_.dy * seconds;
     state_.x += xinc;
     state_.y += yinc;
-    add_score((std::abs(xinc) + std::abs(yinc)) * 1000);
+    add_score((std::abs(xinc) + std::abs(yinc)) * score_multiplier);
 }
 
 double player_t::speed() const
@@ -94,7 +101,7 @@ bool player_t::is_in_world() const
 
 bool player_t::collides(const player_t& other) const
 {
-    const auto size = state_.size / 2 + other.state_.size / 2;
+    const auto size = player_t::state_t::size;
     const auto dist = std::sqrt(std::norm(
         std::complex{other.state_.x - state_.x, other.state_.y - state_.y}));
     return dist < size;

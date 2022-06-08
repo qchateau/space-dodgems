@@ -16,7 +16,7 @@ public:
     listener_t(
         net::io_context& ioc,
         std::vector<std::shared_ptr<world_t>> worlds,
-        tcp::endpoint endpoint);
+        const tcp::endpoint& endpoint);
 
     void run();
 

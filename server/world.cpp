@@ -33,36 +33,35 @@ std::string get_fake_player_name(
         "Spock",
     };
     int idx = 0;
-    for (; idx < names.size() - 1; ++idx) {
-        const auto& name = names[idx];
+    for (const auto& name : names) {
         auto it = find_if(
             begin(current_players), end(current_players), [&](const auto& p) {
                 return name == p->name();
             });
         if (it == end(current_players)) {
-            break;
+            return name;
         }
     }
-    return names[idx];
+    return names.back();
 }
 
 }
 
-world_t::world_t(net::io_context& ioc) : ioc_{ioc} {}
+world_t::world_t(net::io_context& ioc) : ioc_{ioc}, uuid_generator_{} {}
 
 world_t::~world_t() = default;
 
-int world_t::real_players() const
+std::size_t world_t::real_players() const
 {
     return active_real_players() + idle_players_.size();
 }
 
-int world_t::active_real_players() const
+std::size_t world_t::active_real_players() const
 {
     return players_.size() - fake_players_.size();
 }
 
-int world_t::available_places() const
+std::size_t world_t::available_places() const
 {
     return max_players - real_players();
 }
@@ -145,7 +144,8 @@ void world_t::adjust_players()
         return;
     }
 
-    int missing = max_players - players_.size();
+    auto missing = static_cast<ssize_t>(max_players)
+                   - static_cast<ssize_t>(players_.size());
     if (missing > 0) {
         spdlog::debug("adding {} fake players", missing);
         for (int i = 0; i < missing; ++i) {
@@ -154,7 +154,8 @@ void world_t::adjust_players()
         }
     }
     else if (missing < 0) {
-        int nr_to_remove = std::min<int>(-missing, fake_players_.size());
+        auto nr_to_remove =
+            std::min(-missing, static_cast<ssize_t>(fake_players_.size()));
         spdlog::debug("removing {} fake players", nr_to_remove);
         for (int i = 0; i < nr_to_remove; ++i) {
             fake_players_.pop_back();
@@ -198,7 +199,7 @@ nlohmann::json world_t::game_state_for_player(const player_handle_t& player)
             {"dy", p.state().dy},
             {"ddx", p.state().ddx},
             {"ddy", p.state().ddy},
-            {"size", p.state().size},
+            {"size", player_t::state_t::size},
             {"score", p.score()},
             {"best_score", p.best_score()},
             {"is_me", is_me},
@@ -299,8 +300,8 @@ void world_t::update_fake_player_dd(player_t& p)
 
     // initial closest target is the center of the map
     // this way fake players will more likely stay close to the middle
-    double closest_x = 0.5;
-    double closest_y = 0.5;
+    double closest_x = 0.5; // NOLINT(*-magic-numbers)
+    double closest_y = 0.5; // NOLINT(*-magic-numbers)
     double closest_distance = l1_dist_to(closest_x, closest_y);
 
     for (const auto& other_ptr : players_) {

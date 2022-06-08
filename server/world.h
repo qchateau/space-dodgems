@@ -26,15 +26,21 @@ public:
 
     world_t(net::io_context& ioc);
     ~world_t();
+
+    world_t(const world_t&) = delete;
+    world_t(world_t&&) = delete;
+    world_t& operator=(const world_t&) = delete;
+    world_t& operator=(world_t&&) = delete;
+
     void run();
 
     nlohmann::json game_state_for_player(const player_handle_t& player);
     player_handle_t register_player(
         const player_id_t& player_id,
         std::string_view player_name);
-    int real_players() const;
-    int active_real_players() const;
-    int available_places() const;
+    std::size_t real_players() const;
+    std::size_t active_real_players() const;
+    std::size_t available_places() const;
 
 private:
     using clock_t = std::chrono::steady_clock;
@@ -47,14 +53,14 @@ private:
         const player_id_t& player_id,
         std::string_view player_name,
         bool fake);
-    void unregister_player(const player_t& p);
+    void unregister_player(const player_t& player);
     void adjust_players();
 
     net::awaitable<void> update_loop();
     net::awaitable<void> check_idle_players_loop();
 
     void update(std::chrono::nanoseconds dt);
-    void update_fake_player_dd(player_t& p);
+    void update_fake_player_dd(player_t& player);
     void check_idle_players();
 
     net::io_context& ioc_;

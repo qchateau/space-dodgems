@@ -10,22 +10,22 @@ constexpr auto addr_envvar = "ADDR";
 constexpr auto port_envvar = "PORT";
 constexpr auto nworlds_envvar = "NWORLDS";
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
-    const auto mb_address = std::getenv(addr_envvar);
-    if (!mb_address) {
+    const auto* mb_address = std::getenv(addr_envvar);
+    if (mb_address == nullptr) {
         std::cerr << "Environment variable " << addr_envvar << " is not defined"
                   << std::endl;
         return EXIT_FAILURE;
     }
-    const auto mb_port = std::getenv(port_envvar);
-    if (!mb_address) {
+    const auto* mb_port = std::getenv(port_envvar);
+    if (mb_address == nullptr) {
         std::cerr << "Environment variable " << port_envvar << " is not defined"
                   << std::endl;
         return EXIT_FAILURE;
     }
-    const auto mb_nworlds = std::getenv(nworlds_envvar);
-    if (!mb_address) {
+    const auto* mb_nworlds = std::getenv(nworlds_envvar);
+    if (mb_address == nullptr) {
         std::cerr << "Environment variable " << nworlds_envvar
                   << " is not defined" << std::endl;
         return EXIT_FAILURE;

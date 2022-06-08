@@ -4,13 +4,13 @@ ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && apt-get install -y \
-        cmake \
-        clang-10 \
-        libc++-10-dev \
-        libc++abi-10-dev \
-        lld-10 \
-        python3 \
-        python3-pip \
+    cmake \
+    clang-10 \
+    libc++-10-dev \
+    libc++abi-10-dev \
+    lld-10 \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m pip install -U pip && python3 -m pip install conan

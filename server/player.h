@@ -16,13 +16,14 @@ public:
     using id_t = player_id_t;
     using clock_t = std::chrono::steady_clock;
     struct state_t {
-        const double size{0.01};
+        static constexpr double size{0.01};
 
         double x, y, dx, dy, ddx, ddy;
     };
     static constexpr double max_dd = 5;
 
     player_t(world_t& world, id_t id, std::string_view name, bool fake);
+    ~player_t() = default;
 
     player_t(const player_t&) = delete;
     player_t(player_t&&) = delete;
@@ -39,18 +40,18 @@ public:
     void add_score(double v);
     void update_pos(std::chrono::nanoseconds dt);
 
-    const auto& state() const { return state_; };
-    id_t id() const { return id_; }
-    const std::string& name() const { return name_; }
-    bool alive() const { return alive_; }
-    bool fake() const { return fake_; }
-    double score() const { return score_; }
-    double best_score() const { return best_score_; }
-    double speed() const;
-    double distance_to(const player_t& other) const;
+    [[nodiscard]] const auto& state() const { return state_; };
+    [[nodiscard]] id_t id() const { return id_; }
+    [[nodiscard]] const std::string& name() const { return name_; }
+    [[nodiscard]] bool alive() const { return alive_; }
+    [[nodiscard]] bool fake() const { return fake_; }
+    [[nodiscard]] double score() const { return score_; }
+    [[nodiscard]] double best_score() const { return best_score_; }
+    [[nodiscard]] double speed() const;
+    [[nodiscard]] double distance_to(const player_t& other) const;
 
-    bool is_in_world() const;
-    bool collides(const player_t& other) const;
+    [[nodiscard]] bool is_in_world() const;
+    [[nodiscard]] bool collides(const player_t& other) const;
     void kill();
 
 private:

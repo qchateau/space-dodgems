@@ -1,6 +1,7 @@
 #include "session.h"
 #include "world.h"
 
+#include <optional>
 #include <boost/uuid/string_generator.hpp>
 #include <spdlog/spdlog.h>
 
@@ -9,10 +10,11 @@ namespace sd {
 namespace {
 
 constexpr auto keepalive_period = std::chrono::seconds{60};
+constexpr auto player_name_max_length = 30;
 
 bool player_name_is_valid(std::string_view name)
 {
-    return name.size() >= 3 && name.size() <= 30;
+    return name.size() >= 3 && name.size() <= player_name_max_length;
 }
 
 }
