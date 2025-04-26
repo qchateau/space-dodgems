@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install -U pip && python3 -m pip install conan
+RUN python3 -m pip install -U pip && python3 -m pip install "conan<2"
 
 RUN mkdir -p /opt/server/
 WORKDIR /opt/server/
