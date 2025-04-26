@@ -2,7 +2,7 @@
 
 This is a mini-game created with boost.beast, C++20 coroutines and websockets.
 
-[I want to play](https://qchateau.ovh/space-dodgems/)
+[I want to play](https://space-dodgems.qchateau.fr/)
 
 ## How to run
 
