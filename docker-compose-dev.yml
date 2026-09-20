@@ -5,9 +5,15 @@ volumes:
   builddata:
 
 services:
-  backend:
-    image: qchateau/space-dodgems:dev
+  nginx:
     build:
+      context: ./client
+    volumes:
+      - ./nginx:/etc/nginx/templates
+      - ./client:/www/data
+  backend:
+    build:
+      context: ./server
       target: dev
     volumes:
       - ./server/:/opt/server/
