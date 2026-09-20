@@ -1,27 +1,17 @@
 version: "3.4"
 
-volumes:
-  conandata:
-  builddata:
-
 services:
   nginx:
     restart: always
-    image: nginx:1.19
-    volumes:
-      - ./nginx:/etc/nginx/templates
-      - ./client:/www/data
+    image: ghcr.io/qchateau/space-dodgems-client:latest
     ports:
-      - "${EXTERNAL_PORT-127.0.0.1:8080}:80"
+      - "${EXTERNAL_PORT-127.0.0.1:8081}:80"
     environment:
       - WS_SERVER=backend:5678
 
   backend:
     restart: always
-    image: ghcr.io/qchateau/space-dodgems:${BACKEND_TAG-latest}
-    build:
-      context: ./server
-      target: release
+    image: ghcr.io/qchateau/space-dodgems-server:latest
     environment:
       - ADDR=0.0.0.0
       - PORT=5678
